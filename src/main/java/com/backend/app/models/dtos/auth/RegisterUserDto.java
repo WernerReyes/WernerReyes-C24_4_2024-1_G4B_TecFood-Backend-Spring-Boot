@@ -30,12 +30,13 @@ public class RegisterUserDto {
             return new DtoException<>("Password must have at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character", null);
         }
 
-        if(body.phoneNumber != null) {
-            if (ValidationsUtility.isFieldEmpty(body.phoneNumber)) return new DtoException<>("Phone number is required", null);
+
+        System.out.println("body.phoneNumber: " + body.phoneNumber);
+
+        if(!ValidationsUtility.isFieldEmpty(body.phoneNumber)) {
             if (!ValidationsUtility.isPhoneNumberValid(body.phoneNumber)) return new DtoException<>("Phone number must have at least 9 characters", null);
         }
-        if(body.dni != null) {
-            if (ValidationsUtility.isFieldEmpty(body.dni)) return new DtoException<>("DNI is required", null);
+        if(!ValidationsUtility.isFieldEmpty(body.dni)) {
             if (!ValidationsUtility.isDniValid(body.dni)) return new DtoException<>("DNI must have at least 8 characters", null);
         }
 

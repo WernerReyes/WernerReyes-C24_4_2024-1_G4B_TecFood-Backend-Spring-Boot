@@ -42,4 +42,5 @@ public class ValidationsUtility {
         public static boolean isDniValid(String dni) {
             return dni.matches("^\\d{8}$");
         }
+
 }
