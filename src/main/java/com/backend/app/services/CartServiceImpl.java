@@ -34,17 +34,21 @@ public class CartServiceImpl implements ICartService {
     @Override
     public AddToCartResponse addOneDishToCart(Long dishId) throws Exception {
         UserEntity user = userAuthentication();
+        GetDishesCartResponse dishesByUser = getDishesCartByUser();
+        if (dishesByUser.totalQuantity() + 1 > 5) throw CustomException.badRequest("You can't add more than 5 dishes");
 
         DishEntity dish = dishRepository.findById(dishId).orElse(null);
         if (dish == null) throw CustomException.badRequest("Dish not found");
 
         CartEntity cart = cartRepository.findByUserAndDish(user, dish);
         if (cart != null) {
+            System.out.println(cart.getQuantity());
             if(cart.getQuantity() + 1 > 5) throw CustomException.badRequest("You can't add more than 5 dishes");
             cart.setQuantity(cart.getQuantity() + 1);
             cartRepository.save(cart);
             return new AddToCartResponse(
-                    "Dish added to cart"
+                    cart.getDish().getName() + " added to cart",
+                    cart
             );
         }
 
@@ -56,7 +60,8 @@ public class CartServiceImpl implements ICartService {
         cartRepository.save(cart);
 
         return new AddToCartResponse(
-                "Dish added to cart"
+                cart.getDish().getName() + " added to cart",
+                cart
         );
     }
 
@@ -73,7 +78,8 @@ public class CartServiceImpl implements ICartService {
             cart.setQuantity(cart.getQuantity() + addToCartDto.getQuantity());
             cartRepository.save(cart);
             return new AddToCartResponse(
-                    "Dish added to cart"
+                    cart.getDish().getName() + " added to cart",
+                    cart
             );
         }
 
@@ -85,7 +91,8 @@ public class CartServiceImpl implements ICartService {
         cartRepository.save(cart);
 
         return new AddToCartResponse(
-                "Dish added to cart"
+                cart.getDish().getName() + " added to cart",
+                cart
         );
 
     }
@@ -103,7 +110,8 @@ public class CartServiceImpl implements ICartService {
         if (cart.getQuantity() == 1) {
             cartRepository.delete(cart);
             return new DeleteToCardResponse(
-                    "Dish deleted from cart"
+                    "Dish deleted from cart",
+                    cart.getQuantity()
             );
         }
 
@@ -111,30 +119,34 @@ public class CartServiceImpl implements ICartService {
         cartRepository.save(cart);
 
         return new DeleteToCardResponse(
-                "Dish deleted from cart"
+                "Dish deleted from cart",
+                cart.getQuantity()
         );
     }
 
     @Override
-    public DeleteToCardResponse deleteItemFromCart(Long cartId) throws Exception {
+    public DeleteToCardResponse deleteAllDishesFromCart(Long dishId) throws Exception {
         UserEntity user = userAuthentication();
 
-        CartEntity cart = cartRepository.findById(cartId).orElse(null);
-        if (cart == null) throw CustomException.badRequest("Dish not found in cart");
+        DishEntity dish = dishRepository.findById(dishId).orElse(null);
+        if (dish == null) throw CustomException.badRequest("Dish not found");
 
+        CartEntity cart = cartRepository.findByUserAndDish(user, dish);
+        if (cart == null) throw CustomException.badRequest("Dish not found in cart");
         cartRepository.delete(cart);
 
         return new DeleteToCardResponse(
-                "Dish deleted from cart"
+                "Dish deleted from cart",
+                cart.getQuantity()
         );
     }
 
     @Override
-    public GetDishesCartResponse getDishesCart() throws Exception {
+    public GetDishesCartResponse getDishesCartByUser() throws Exception {
         UserEntity user = userAuthentication();
         List<CartEntity> cart = cartRepository.findByUser(user);
-        if (cart == null) throw CustomException.badRequest("Cart is empty");
         int totalQuantity = cart.stream().mapToInt(CartEntity::getQuantity).sum();
+        if (totalQuantity > 5) throw CustomException.badRequest("You can't add more than 5 dishes");
         double totalPayment = cart.stream().mapToDouble(value -> value.getDish().getPrice() * value.getQuantity()).sum();
         return new GetDishesCartResponse(
                 "Dishes in cart",

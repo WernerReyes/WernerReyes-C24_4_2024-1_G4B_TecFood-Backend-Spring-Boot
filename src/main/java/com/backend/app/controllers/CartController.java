@@ -36,14 +36,14 @@ public class CartController {
         return new ResponseEntity<>(cartServiceImpl.deleteOneDishFromCart(dishId), HttpStatus.OK);
     }
 
-    @DeleteMapping("/item/{cartId}")
-    public ResponseEntity<DeleteToCardResponse> deleteItemFromCart(@PathVariable Long cartId) throws Exception {
-        return new ResponseEntity<>(cartServiceImpl.deleteItemFromCart(cartId), HttpStatus.OK);
+    @DeleteMapping("/all/{dishId}")
+    public ResponseEntity<DeleteToCardResponse> deleteAllDishesFromCart(@PathVariable Long dishId) throws Exception {
+        return new ResponseEntity<>(cartServiceImpl.deleteAllDishesFromCart(dishId), HttpStatus.OK);
     }
 
-    @GetMapping("")
+    @GetMapping("/user")
     public ResponseEntity<GetDishesCartResponse> getDishesCart() throws Exception {
-        return new ResponseEntity<>(cartServiceImpl.getDishesCart(), HttpStatus.OK);
+        return new ResponseEntity<>(cartServiceImpl.getDishesCartByUser(), HttpStatus.OK);
     }
 
 }

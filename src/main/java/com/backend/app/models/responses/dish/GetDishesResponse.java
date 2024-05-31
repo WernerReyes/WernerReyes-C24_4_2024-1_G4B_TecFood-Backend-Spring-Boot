@@ -16,5 +16,3 @@ public record GetDishesResponse(
         , String next
         , String previous
 ) { }
-
-

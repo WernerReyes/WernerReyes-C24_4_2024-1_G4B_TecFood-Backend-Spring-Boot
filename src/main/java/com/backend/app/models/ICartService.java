@@ -9,6 +9,6 @@ public interface ICartService {
     AddToCartResponse addOneDishToCart(Long dishId) throws Exception;
     AddToCartResponse addManyDishesToCart(AddToCartDto addToCartDto) throws Exception;
     DeleteToCardResponse deleteOneDishFromCart(Long dishId) throws Exception;
-    DeleteToCardResponse deleteItemFromCart(Long cartId) throws Exception;
-    GetDishesCartResponse getDishesCart() throws Exception;
+    DeleteToCardResponse deleteAllDishesFromCart(Long dishId) throws Exception;
+    GetDishesCartResponse getDishesCartByUser() throws Exception;
 }

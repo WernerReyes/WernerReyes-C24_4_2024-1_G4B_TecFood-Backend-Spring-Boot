@@ -4,13 +4,14 @@ import com.backend.app.persistence.entities.DishEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 
 @Repository
-public interface DishRepository extends JpaRepository<DishEntity, Long> {
+public interface DishRepository extends JpaRepository<DishEntity, Long>, JpaSpecificationExecutor<DishEntity> {
     Page<DishEntity> findAll(Pageable pageable);
-    Page<DishEntity> findByCategory_IdDishCategory(Long idCategory, Pageable pageable);
-    Page<DishEntity> findByNameContaining(String name, Pageable pageable);
-    Page<DishEntity> findByNameContainingAndCategory_IdDishCategory(String name, Long idCategory, Pageable pageable);
+    DishEntity findByName(String name);
 }

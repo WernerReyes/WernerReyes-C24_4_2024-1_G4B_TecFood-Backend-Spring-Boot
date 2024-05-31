@@ -2,6 +2,6 @@ package com.backend.app.models.responses.cart;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-@JsonPropertyOrder({"message"})
-public record DeleteToCardResponse(String message) {
+@JsonPropertyOrder({"message", "quantity"})
+public record DeleteToCardResponse(String message, int quantity) {
 }
