@@ -5,6 +5,7 @@ import com.backend.app.models.ICartService;
 import com.backend.app.models.dtos.card.AddToCartDto;
 import com.backend.app.models.responses.cart.AddToCartResponse;
 import com.backend.app.models.responses.cart.DeleteToCardResponse;
+import com.backend.app.models.responses.cart.GetDishToCartResponse;
 import com.backend.app.models.responses.cart.GetDishesCartResponse;
 import com.backend.app.persistence.entities.CartEntity;
 import com.backend.app.persistence.entities.DishEntity;
@@ -154,6 +155,16 @@ public class CartServiceImpl implements ICartService {
                 totalQuantity,
                 totalPayment
 
+        );
+    }
+
+    @Override
+    public GetDishToCartResponse getDishToCartByDishId(Long dishId) throws Exception {
+        CartEntity cart = cartRepository.findByDish_IdDish(dishId);
+        if (cart == null) throw CustomException.badRequest("Dish not found in cart");
+        return new GetDishToCartResponse(
+                "Dish found in cart",
+                cart
         );
     }
 

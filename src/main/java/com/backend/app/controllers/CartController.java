@@ -5,6 +5,7 @@ import com.backend.app.exception.DtoException;
 import com.backend.app.models.dtos.card.AddToCartDto;
 import com.backend.app.models.responses.cart.AddToCartResponse;
 import com.backend.app.models.responses.cart.DeleteToCardResponse;
+import com.backend.app.models.responses.cart.GetDishToCartResponse;
 import com.backend.app.models.responses.cart.GetDishesCartResponse;
 import com.backend.app.services.CartServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,11 @@ public class CartController {
     @GetMapping("/user")
     public ResponseEntity<GetDishesCartResponse> getDishesCart() throws Exception {
         return new ResponseEntity<>(cartServiceImpl.getDishesCartByUser(), HttpStatus.OK);
+    }
+
+    @GetMapping("/dish/{dishId}")
+    public ResponseEntity<GetDishToCartResponse> getDishToCart(@PathVariable Long dishId) throws Exception {
+        return new ResponseEntity<>(cartServiceImpl.getDishToCartByDishId(dishId), HttpStatus.OK);
     }
 
 }
