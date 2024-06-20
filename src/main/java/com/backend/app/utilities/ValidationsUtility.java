@@ -1,6 +1,11 @@
 package com.backend.app.utilities;
 
+import com.backend.app.persistence.enums.upload.ETypeFolder;
+import com.backend.app.persistence.enums.upload.ETypeImage;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 public class ValidationsUtility {
 
@@ -13,7 +18,18 @@ public class ValidationsUtility {
         }
         return false;
     }
-        public static boolean isFieldEmpty(String field) { return field.isBlank(); }
+
+    public static boolean hasAllNullFields(Object obj) throws IllegalAccessException {
+        for (Field field : obj.getClass().getDeclaredFields()) {
+            field.setAccessible(true); // You might want to set modifier to public first.
+            if (field.get(obj) != null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+        public static boolean isFieldEmpty(String field) { return field.isBlank() || field.isEmpty(); }
 
         public static boolean isNameValid(String name) {
             return name.matches("^.{3,}$");
@@ -31,16 +47,25 @@ public class ValidationsUtility {
             return password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=\\S+$).{8,}$");
         }
 
-        public static boolean isUsernameValid(String username) {
-            return username.matches("^[a-zA-Z0-9_]{5,}[a-zA-Z]+[0-9]*$");
-        }
-
         public static boolean isPhoneNumberValid(String phoneNumber) {
             return phoneNumber.matches("^\\d{9}$");
         }
 
         public static boolean isDniValid(String dni) {
             return dni.matches("^\\d{8}$");
+        }
+
+        public static boolean isValidImageFile(MultipartFile file) {
+            ETypeImage typeImage = Arrays.stream(ETypeImage.values()).filter(
+                    e -> e.name().equals(file.getContentType().split("/")[1].toUpperCase())
+            ).findFirst().orElse(null);
+            return typeImage != null;
+        }
+
+        public static boolean isValidFolder(ETypeFolder typeFolder) {
+            return Arrays.stream(ETypeFolder.values()).filter(
+                    e -> e.equals(typeFolder)
+            ).findFirst().orElse(null) != null;
         }
 
 }

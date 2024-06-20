@@ -1,6 +1,6 @@
 package com.backend.app.services;
 
-import com.backend.app.exception.CustomException;
+import com.backend.app.exceptions.CustomException;
 import com.backend.app.models.IDishCategoryService;
 import com.backend.app.models.responses.dishCategory.GetDishCategoriesResponse;
 import com.backend.app.models.responses.dishCategory.GetDishCategoryResponse;

@@ -1,6 +1,6 @@
 package com.backend.app.models.dtos.auth;
 
-import com.backend.app.exception.DtoException;
+import com.backend.app.exceptions.DtoException;
 import com.backend.app.utilities.ValidationsUtility;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

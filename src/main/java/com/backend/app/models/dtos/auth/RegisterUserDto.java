@@ -1,6 +1,6 @@
 package com.backend.app.models.dtos.auth;
 
-import com.backend.app.exception.DtoException;
+import com.backend.app.exceptions.DtoException;
 import com.backend.app.utilities.ValidationsUtility;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -29,9 +29,6 @@ public class RegisterUserDto {
         if (!ValidationsUtility.isPasswordValid(body.password)) {
             return new DtoException<>("Password must have at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character", null);
         }
-
-
-        System.out.println("body.phoneNumber: " + body.phoneNumber);
 
         if(!ValidationsUtility.isFieldEmpty(body.phoneNumber)) {
             if (!ValidationsUtility.isPhoneNumberValid(body.phoneNumber)) return new DtoException<>("Phone number must have at least 9 characters", null);

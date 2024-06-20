@@ -1,5 +1,5 @@
 package com.backend.app.models.dtos.user;
-import com.backend.app.exception.DtoException;
+import com.backend.app.exceptions.DtoException;
 import com.backend.app.models.dtos.common.PaginationDto;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

@@ -1,13 +1,13 @@
 package com.backend.app.services;
 
-import com.backend.app.exception.CustomException;
+import com.backend.app.exceptions.CustomException;
 import com.backend.app.models.IAuthService;
 import com.backend.app.models.dtos.auth.LoginGoogleUserDto;
 import com.backend.app.models.dtos.auth.LoginUserDto;
 import com.backend.app.models.dtos.auth.RegisterUserDto;
 import com.backend.app.models.responses.auth.LoginUserResponse;
 import com.backend.app.models.responses.auth.RegisterUserResponse;
-import com.backend.app.persistence.entities.ERole;
+import com.backend.app.persistence.enums.ERole;
 import com.backend.app.persistence.entities.UserEntity;
 import com.backend.app.persistence.repositories.RoleRepository;
 import com.backend.app.persistence.repositories.UserRepository;

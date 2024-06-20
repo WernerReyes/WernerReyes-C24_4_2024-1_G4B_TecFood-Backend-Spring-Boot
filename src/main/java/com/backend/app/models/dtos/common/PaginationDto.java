@@ -1,12 +1,10 @@
 package com.backend.app.models.dtos.common;
 
-import com.backend.app.exception.DtoException;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.backend.app.exceptions.DtoException;
+import lombok.*;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class PaginationDto {

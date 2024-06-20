@@ -1,6 +1,6 @@
 package com.backend.app.services;
 
-import com.backend.app.exception.CustomException;
+import com.backend.app.exceptions.CustomException;
 import com.backend.app.models.IDishService;
 import com.backend.app.models.dtos.dish.GetDishesDto;
 import com.backend.app.models.responses.dish.GetDishResponse;
@@ -28,8 +28,7 @@ public class DishServiceImpl implements IDishService {
     @Override
     public GetDishesResponse findAll(GetDishesDto getDishesDto) {
         Pageable pageable = PageRequest.of(getDishesDto.getPage() - 1, getDishesDto.getLimit());
-        Page<DishEntity> dishes = dishRepository.findAll(pageable);
-        dishes = filters(pageable, getDishesDto);
+        Page<DishEntity> dishes = filters(pageable, getDishesDto);
         int total = (int) dishes.getTotalElements();
 
         return new GetDishesResponse(

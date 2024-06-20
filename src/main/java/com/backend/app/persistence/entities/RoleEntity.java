@@ -1,5 +1,6 @@
 package com.backend.app.persistence.entities;
 
+import com.backend.app.persistence.enums.ERole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

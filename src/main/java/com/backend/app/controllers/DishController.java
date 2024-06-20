@@ -1,7 +1,7 @@
 package com.backend.app.controllers;
 
-import com.backend.app.exception.CustomException;
-import com.backend.app.exception.DtoException;
+import com.backend.app.exceptions.CustomException;
+import com.backend.app.exceptions.DtoException;
 import com.backend.app.models.dtos.dish.GetDishesDto;
 import com.backend.app.models.responses.dish.GetDishResponse;
 import com.backend.app.models.responses.dish.GetDishesResponse;
@@ -30,9 +30,17 @@ public class DishController {
             @RequestParam(required = false) Integer max,
             @RequestParam(required = false) String search
     ) {
-        DtoException<GetDishesDto> getDishesDto = GetDishesDto.create(page, limit, idCategory, min, max, search);
-        if(getDishesDto.getError() != null) throw CustomException.badRequest(getDishesDto.getError());
-        return new ResponseEntity<>(dishServiceimpl.findAll(getDishesDto.getData()), HttpStatus.OK);
+
+        GetDishesDto getDishesDto = new GetDishesDto();
+        getDishesDto.setPage(page);
+        getDishesDto.setLimit(limit);
+        getDishesDto.setIdCategory(idCategory);
+        getDishesDto.setMin(min);
+        getDishesDto.setMax(max);
+        getDishesDto.setSearch(search);
+        DtoException<GetDishesDto> getDishesDtoException = GetDishesDto.create(getDishesDto);
+        if(getDishesDtoException.getError() != null) throw CustomException.badRequest(getDishesDtoException.getError());
+        return new ResponseEntity<>(dishServiceimpl.findAll(getDishesDtoException.getData()), HttpStatus.OK);
     }
 
     @GetMapping("/search")

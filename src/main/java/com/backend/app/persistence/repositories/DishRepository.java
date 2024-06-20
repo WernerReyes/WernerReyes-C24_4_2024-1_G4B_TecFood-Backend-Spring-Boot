@@ -12,6 +12,6 @@ import java.util.List;
 
 @Repository
 public interface DishRepository extends JpaRepository<DishEntity, Long>, JpaSpecificationExecutor<DishEntity> {
-    Page<DishEntity> findAll(Pageable pageable);
+
     DishEntity findByName(String name);
 }
