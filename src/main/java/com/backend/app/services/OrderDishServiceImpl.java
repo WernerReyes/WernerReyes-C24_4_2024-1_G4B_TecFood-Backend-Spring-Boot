@@ -2,7 +2,6 @@ package com.backend.app.services;
 
 import com.backend.app.exceptions.CustomException;
 import com.backend.app.models.IOrderDishService;
-import com.backend.app.models.dtos.dish.GetDishesDto;
 import com.backend.app.models.dtos.orderDish.FindOrderDishesByUserDto;
 import com.backend.app.models.dtos.orderDish.UpdateOrderDishStatusDto;
 import com.backend.app.models.responses.orderDish.CreateOrderDishResponse;
@@ -14,7 +13,6 @@ import com.backend.app.persistence.repositories.CartDishRepository;
 import com.backend.app.persistence.repositories.DishRepository;
 import com.backend.app.persistence.repositories.OrderDishItemRepository;
 import com.backend.app.persistence.repositories.OrderDishRepository;
-import com.backend.app.persistence.specifications.DishSpecification;
 import com.backend.app.persistence.specifications.OrderDishSpecification;
 import com.backend.app.utilities.UserAuthenticationUtility;
 import jakarta.transaction.Transactional;
@@ -52,7 +50,14 @@ public class OrderDishServiceImpl implements IOrderDishService {
         List<CartDishEntity> cart = cartDishRepository.findByUser(user);
         if (cart.isEmpty()) throw CustomException.badRequest("Cart is empty");
 
-        Double total = cart.stream().mapToDouble(cartItem -> cartItem.getDish().getPrice() * cartItem.getQuantity()).sum() ;
+        Double total = cart.stream().mapToDouble(cartItem -> cartItem.getDish().getPrice() * cartItem.getQuantity()).sum();
+
+        // Validate if dish stock is enough
+        for (CartDishEntity cartDish : cart) {
+            DishEntity dish = dishRepository.findById(cartDish.getDish().getIdDish()).orElse(null);
+            if (dish == null) throw CustomException.badRequest("Dish not found");
+            if (dish.getStock() < cartDish.getQuantity()) throw CustomException.badRequest("Dish stock is not enough");
+        }
 
         OrderDishEntity order = OrderDishEntity.builder()
                 .user(user)

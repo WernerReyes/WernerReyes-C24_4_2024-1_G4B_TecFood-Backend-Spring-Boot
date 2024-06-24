@@ -1,31 +1,28 @@
 package com.backend.app.models.dtos.auth;
 
-import com.backend.app.exceptions.DtoException;
-import com.backend.app.utilities.ValidationsUtility;
+import com.backend.app.models.dtos.NotNullAndNotEmpty;
+import com.backend.app.utilities.RegularExpUtility;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import javax.validation.constraints.*;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class LoginUserDto {
 
+    @NotNullAndNotEmpty(message = "Email is required")
+    @Email(message = "Email must be a valid Tecsup email", regexp = RegularExpUtility.EMAIL_REGEX)
     private String email;
+
+    @NotNullAndNotEmpty(message = "Password is required")
+    @Pattern(
+            regexp = RegularExpUtility.PASSWORD_REGEX,
+            message = "Password must have at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character"
+    )
     private String password;
 
-    public static DtoException<LoginUserDto> create(LoginUserDto body) throws IllegalAccessException {
-        if(ValidationsUtility.hasNullField(body)) return new DtoException<>("One or more fields are empty", null);
-
-        if (ValidationsUtility.isFieldEmpty(body.email))  return new DtoException<>("Email is required", null);
-        if (!ValidationsUtility.isEmailValid(body.email)) return new DtoException<>("Email must be a valid Tecsup email", null);
-
-        if (ValidationsUtility.isFieldEmpty(body.password)) return new DtoException<>("Password is required", null);
-        if (!ValidationsUtility.isPasswordValid(body.password)) {
-            return new DtoException<>("Password must have at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character", null);
-        }
-        return new DtoException<>(null,body);
-    }
 }
 

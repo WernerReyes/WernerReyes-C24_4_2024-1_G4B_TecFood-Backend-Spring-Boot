@@ -13,4 +13,5 @@ public class DtoException<T> {
         this.error = error;
         this.data = data;
     }
+
 }

@@ -7,12 +7,13 @@ import com.backend.app.models.responses.dish.GetDishResponse;
 import com.backend.app.models.responses.dish.GetDishesResponse;
 import com.backend.app.models.responses.dish.GetDishesToSearchResponse;
 import com.backend.app.services.DishServiceImpl;
+import com.backend.app.utilities.DtoValidatorUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/dish")
@@ -30,15 +31,8 @@ public class DishController {
             @RequestParam(required = false) Integer max,
             @RequestParam(required = false) String search
     ) {
-
-        GetDishesDto getDishesDto = new GetDishesDto();
-        getDishesDto.setPage(page);
-        getDishesDto.setLimit(limit);
-        getDishesDto.setIdCategory(idCategory);
-        getDishesDto.setMin(min);
-        getDishesDto.setMax(max);
-        getDishesDto.setSearch(search);
-        DtoException<GetDishesDto> getDishesDtoException = GetDishesDto.create(getDishesDto);
+        GetDishesDto getDishesDto = new GetDishesDto(page, limit, idCategory, search, min, max);
+        DtoException<GetDishesDto> getDishesDtoException = DtoValidatorUtility.validate(getDishesDto);
         if(getDishesDtoException.getError() != null) throw CustomException.badRequest(getDishesDtoException.getError());
         return new ResponseEntity<>(dishServiceimpl.findAll(getDishesDtoException.getData()), HttpStatus.OK);
     }

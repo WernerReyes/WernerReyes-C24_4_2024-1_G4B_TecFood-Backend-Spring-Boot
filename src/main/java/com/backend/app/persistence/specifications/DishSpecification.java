@@ -29,5 +29,4 @@ public class DishSpecification {
             return criteriaBuilder.like(root.get("name"), "%" + name + "%");
         };
     }
-
 }

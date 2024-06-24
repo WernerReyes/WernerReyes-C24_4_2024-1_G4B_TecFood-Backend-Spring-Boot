@@ -1,35 +1,34 @@
 package com.backend.app.models.dtos.user;
 
-import com.backend.app.exceptions.DtoException;
-import com.backend.app.utilities.ValidationsUtility;
+import com.backend.app.utilities.RegularExpUtility;
 import lombok.*;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Pattern;
+
 @Getter
-@Setter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 @NoArgsConstructor
 public class UpdateUserDto {
+
+    @Min(value = 3, message = "First name must have at least 3 characters")
+    @Max(value = 50, message = "First name must have at most 50 characters")
     private String firstName;
+
+    @Min(value = 3, message = "Last name must have at least 3 characters")
+    @Max(value = 50, message = "Last name must have at most 50 characters")
     private String lastName;
+
+    @Pattern(
+            regexp = RegularExpUtility.PHONE_NUMBER_REGEX,
+            message = "Phone number must have at least 9 characters"
+    )
     private String phoneNumber;
+
+    @Pattern(
+            regexp = RegularExpUtility.DNI_REGEX,
+            message = "DNI must have at least 8 characters"
+    )
     private String dni;
-
-    public static DtoException<UpdateUserDto> create(
-            UpdateUserDto body
-            )  {
-
-        if(!ValidationsUtility.isNameValid(body.firstName)) return new DtoException<>("Invalid first name", null);
-
-        if (!ValidationsUtility.isNameValid(body.lastName)) return new DtoException<>("Invalid last name", null);
-
-        if(!ValidationsUtility.isFieldEmpty(body.phoneNumber)) {
-            if (!ValidationsUtility.isPhoneNumberValid(body.phoneNumber)) return new DtoException<>("Phone number must have at least 9 characters", null);
-        }
-        if(!ValidationsUtility.isFieldEmpty(body.dni)) {
-            if (!ValidationsUtility.isDniValid(body.dni)) return new DtoException<>("DNI must have at least 8 characters", null);
-        }
-
-        return new DtoException<>(null, body);
-    }
-
 }

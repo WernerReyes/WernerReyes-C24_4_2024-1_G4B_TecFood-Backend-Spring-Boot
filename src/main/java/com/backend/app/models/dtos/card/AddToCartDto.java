@@ -1,22 +1,23 @@
 package com.backend.app.models.dtos.card;
 
-import com.backend.app.exceptions.DtoException;
-import com.backend.app.utilities.ValidationsUtility;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class AddToCartDto {
-    private Long dishId;
-    private int quantity;
 
-    public static DtoException<AddToCartDto> create(AddToCartDto body) throws IllegalAccessException {
-        if(ValidationsUtility.hasNullField(body)) return new DtoException<>("One or more fields are empty", null);
-        if(body.quantity > 5) return new DtoException<>("You can't add more than 5 dish", null);
-        return new DtoException<>(null, body);
-    }
+    @NotNull(message = "Dish ID is required")
+    @Min(value = 1, message = "Dish ID must be greater than 0")
+    private Long dishId;
+
+    @Min(value = 1, message = "Quantity must be greater than 1")
+    @Max(value = 5, message = "Quantity must be less than 5")
+    private Integer quantity;
 }

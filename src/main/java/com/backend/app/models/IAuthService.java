@@ -7,8 +7,9 @@ import com.backend.app.models.responses.auth.LoginUserResponse;
 import com.backend.app.models.responses.auth.RegisterUserResponse;
 
 public interface IAuthService {
-    public LoginUserResponse login(LoginUserDto loginUserDto) throws Exception;
-    public LoginUserResponse loginGoogle(LoginGoogleUserDto loginGoogleUserDto) throws Exception;
-    public RegisterUserResponse register(RegisterUserDto registerUserDto) throws Exception;
-    public LoginUserResponse revalidateToken() throws Exception;
+    LoginUserResponse login(LoginUserDto loginUserDto) throws Exception;
+    LoginUserResponse loginGoogle(LoginGoogleUserDto loginGoogleUserDto) throws Exception;
+    RegisterUserResponse register(RegisterUserDto registerUserDto);
+    LoginUserResponse renovateToken(String expiredToken) throws Exception;
+    LoginUserResponse revalidateToken() throws Exception;
 }

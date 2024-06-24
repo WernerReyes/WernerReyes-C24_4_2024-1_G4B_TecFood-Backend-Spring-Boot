@@ -6,11 +6,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
         "message",
         "payment",
-        "invoiceReportUrl"
 })
 public record ProcessPaymentResponse(
         String message,
-        PaymentEntity payment,
-        String invoiceReportUrl
+        PaymentEntity payment
 ) {
 }

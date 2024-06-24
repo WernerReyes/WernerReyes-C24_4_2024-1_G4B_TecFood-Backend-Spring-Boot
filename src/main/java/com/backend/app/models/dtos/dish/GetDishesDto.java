@@ -1,29 +1,37 @@
 package com.backend.app.models.dtos.dish;
-import com.backend.app.exceptions.DtoException;
+
 import com.backend.app.models.dtos.common.PaginationDto;
 import lombok.*;
-
+import javax.validation.constraints.*;
 import java.util.List;
 
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class GetDishesDto extends PaginationDto {
-    private List<Long> idCategory;
+
+    private List<
+            @Min(value = 1, message = "Category ID must be greater than 0")
+            @Digits(integer = 10, fraction = 0, message = "Category ID must be a number and integer")
+            Long
+            > idCategory;
+
+    @Min(value = 3, message = "Page must be greater than 3")
     private String search;
+
+    @Min(value = 0, message = "Min value must be greater than 0")
+    @Max(value = 1000, message = "Min value must be less than 1000")
     private Integer min;
+
+    @Min(value = 0, message = "Max value must be greater than 0")
+    @Max(value = 1000, message = "Max value must be less than 1000")
     private Integer max;
 
-    public static DtoException<GetDishesDto> create(GetDishesDto body) {
-        DtoException<PaginationDto> paginationDto = PaginationDto.create(body.getPage(), body.getLimit());
-        if (paginationDto.getError() != null) return new DtoException<>(paginationDto.getError(), null);
-        if(body.getIdCategory() != null) {
-            if (body.getIdCategory().stream().mapToDouble(Long::doubleValue).anyMatch(id -> id <= 0)) return new DtoException<>("One or more fields are empty", null);
-        }
-        if(body.min != null && body.min < 0) return new DtoException<>("Min value must be greater than 0", null);
-        if(body.max != null && body.max < 0) return new DtoException<>("Max value must be greater than 0", null);
-        return new DtoException<>(null, body);
+    public GetDishesDto(Integer page, Integer limit, List<Long> idCategory, String search, Integer min, Integer max) {
+        super(page, limit);
+        this.idCategory = idCategory;
+        this.search = search;
+        this.min = min;
+        this.max = max;
     }
 }
 

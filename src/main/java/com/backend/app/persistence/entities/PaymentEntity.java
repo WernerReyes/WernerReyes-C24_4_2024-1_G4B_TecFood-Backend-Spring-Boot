@@ -19,7 +19,7 @@ public class PaymentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="payment_id")
-    private Long id;
+    private Long paymentId;
 
     @Column(name="amount")
     private Double amount;

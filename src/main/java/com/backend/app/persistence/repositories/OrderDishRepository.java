@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import java.util.List;
 
 public interface OrderDishRepository extends JpaRepository<OrderDishEntity, Long>, JpaSpecificationExecutor<OrderDishEntity> {
-    List<OrderDishEntity> findByUserOrderByOrderDateDesc(UserEntity user);
+    List<OrderDishEntity> findAllByUser(UserEntity userEntity);
 }

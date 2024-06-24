@@ -1,8 +1,10 @@
 package com.backend.app.exceptions;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 public class CustomException extends RuntimeException {
+    @Getter
     private final HttpStatus status;
     private final String message;
 
@@ -22,10 +24,6 @@ public class CustomException extends RuntimeException {
 
     public static CustomException internalServerError(String message) {
         return new CustomException(HttpStatus.INTERNAL_SERVER_ERROR, message);
-    }
-
-    public HttpStatus getStatus() {
-        return status;
     }
 
     @Override

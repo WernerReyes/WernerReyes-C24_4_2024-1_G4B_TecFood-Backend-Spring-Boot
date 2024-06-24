@@ -31,7 +31,7 @@ public class SecutiryConfiguration {
                     authRequest.requestMatchers(HttpMethod.POST,"/api/auth/**").permitAll();
                     authRequest.requestMatchers(HttpMethod.GET,"/api/dish/**").permitAll();
                     authRequest.requestMatchers(HttpMethod.GET,"/api/dish-category/**").permitAll();
-                    authRequest.requestMatchers(HttpMethod.GET,"/api/category/**").permitAll();
+
                     authRequest.anyRequest().authenticated();
                         }
                 )

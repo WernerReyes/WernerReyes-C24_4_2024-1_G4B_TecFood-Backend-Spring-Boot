@@ -28,7 +28,7 @@ public class CartDishServiceImpl implements ICartDishService {
     private UserAuthenticationUtility userAuthenticationUtility;
 
     @Override
-    public AddToCartResponse addOneDishToCart(Long dishId) throws Exception {
+    public AddToCartResponse addOneDishToCart(Long dishId) {
         UserEntity user = userAuthenticationUtility.find();
         FindDishesToCartResponse dishesByUser = findDishesCartByUser();
         if (dishesByUser.totalQuantity() + 1 > 5) throw CustomException.badRequest("You can't add more than 5 dishes");
@@ -62,7 +62,7 @@ public class CartDishServiceImpl implements ICartDishService {
     }
 
     @Override
-    public AddToCartResponse addManyDishesToCart(AddToCartDto addToCartDto) throws Exception {
+    public AddToCartResponse addManyDishesToCart(AddToCartDto addToCartDto)  {
         UserEntity user = userAuthenticationUtility.find();
 
         DishEntity dish = dishRepository.findById(addToCartDto.getDishId()).orElse(null);
@@ -94,7 +94,7 @@ public class CartDishServiceImpl implements ICartDishService {
     }
 
     @Override
-    public DeleteToCardResponse deleteOneDishFromCart(Long dishId) throws Exception {
+    public DeleteToCardResponse deleteOneDishFromCart(Long dishId) {
         UserEntity user = userAuthenticationUtility.find();
 
         DishEntity dish = dishRepository.findById(dishId).orElse(null);
@@ -121,7 +121,7 @@ public class CartDishServiceImpl implements ICartDishService {
     }
 
     @Override
-    public DeleteToCardResponse deleteAllDishesFromCart(Long dishId) throws Exception {
+    public DeleteToCardResponse deleteAllDishesFromCart(Long dishId) {
         UserEntity user = userAuthenticationUtility.find();
 
         DishEntity dish = dishRepository.findById(dishId).orElse(null);
@@ -138,7 +138,7 @@ public class CartDishServiceImpl implements ICartDishService {
     }
 
     @Override
-    public FindDishesToCartResponse findDishesCartByUser() throws Exception {
+    public FindDishesToCartResponse findDishesCartByUser() {
         UserEntity user = userAuthenticationUtility.find();
         List<CartDishEntity> cart = cartDishRepository.findByUser(user);
         int totalQuantity = cart.stream().mapToInt(CartDishEntity::getQuantity).sum();
@@ -154,7 +154,7 @@ public class CartDishServiceImpl implements ICartDishService {
     }
 
     @Override
-    public FindDishToCartResponse findDishToCartByDishId(Long dishId) throws Exception {
+    public FindDishToCartResponse findDishToCartByDishId(Long dishId) {
         CartDishEntity cart = cartDishRepository.findByDish_IdDish(dishId);
         if (cart == null) throw CustomException.badRequest("Dish not found in cart");
         return new FindDishToCartResponse(
@@ -164,7 +164,7 @@ public class CartDishServiceImpl implements ICartDishService {
     }
 
     @Override
-    public FindTotalDishesToCartResponse findTotalDishesCartByUser() throws Exception {
+    public FindTotalDishesToCartResponse findTotalDishesCartByUser() {
         UserEntity user = userAuthenticationUtility.find();
         List<CartDishEntity> cart = cartDishRepository.findByUser(user);
         int totalQuantity = cart.stream().mapToInt(CartDishEntity::getQuantity).sum();

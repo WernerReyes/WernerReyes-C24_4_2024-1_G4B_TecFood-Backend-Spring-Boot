@@ -69,6 +69,13 @@ public class JwtUtility {
         return claimsSet;
     }
 
+    public Long getUserIdFromJWT(String jwt) throws Exception {
+        SignedJWT signedJWT = SignedJWT.parse(jwt);
+        JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+        System.out.println("token expirado " + claimsSet.getSubject());
+        return Long.parseLong(claimsSet.getSubject());
+    }
+
     private PrivateKey loadPrivateKey(Resource resource) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         byte[] keyBytes = Files.readAllBytes(Paths.get(resource.getURI()));
         String privateKeyPEM = new String(keyBytes, StandardCharsets.UTF_8)

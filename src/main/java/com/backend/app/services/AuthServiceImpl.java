@@ -12,12 +12,10 @@ import com.backend.app.persistence.entities.UserEntity;
 import com.backend.app.persistence.repositories.RoleRepository;
 import com.backend.app.persistence.repositories.UserRepository;
 import com.backend.app.utilities.JwtUtility;
+import com.backend.app.utilities.UserAuthenticationUtility;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 
 @Service
@@ -34,6 +32,9 @@ public class AuthServiceImpl implements IAuthService {
 
     @Autowired
     private JwtUtility jwtUtility;
+
+    @Autowired
+    private UserAuthenticationUtility userAuthenticationUtility;
 
     @Override
     public LoginUserResponse login(LoginUserDto loginUserDto) throws Exception {
@@ -83,11 +84,11 @@ public class AuthServiceImpl implements IAuthService {
         );
     }
 
-    public RegisterUserResponse register(RegisterUserDto registerUserDto) throws Exception {
+    public RegisterUserResponse register(RegisterUserDto registerUserDto) {
         UserEntity user = userRepository.findByEmail(registerUserDto.getEmail());
         if (user != null) throw CustomException.badRequest("Email already exists");
 
-        if(!registerUserDto.getDni().isEmpty()) {
+        if(registerUserDto.getDni() != null) {
             user = userRepository.findByDni(registerUserDto.getDni());
             if (user != null) throw CustomException.badRequest("DNI already exists");
         }
@@ -111,12 +112,26 @@ public class AuthServiceImpl implements IAuthService {
         );
     }
 
-    public LoginUserResponse revalidateToken() throws Exception {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userId = authentication.getName();
-        UserEntity user = userRepository.findById(Long.parseLong(userId)).orElse(null);
+    @Override
+    public LoginUserResponse renovateToken(
+       String expiredToken
+    ) throws Exception {
+        Long userId = jwtUtility.getUserIdFromJWT(expiredToken);
+        UserEntity user = userRepository.findById(userId).orElse(null);
         if (user == null) throw CustomException.badRequest("User not found");
+        String token = jwtUtility.generateJWT(user.getId());
+        return new LoginUserResponse(
+                "Token refreshed",
+                user,
+                token
+        );
+    }
 
+    @Override
+    public LoginUserResponse revalidateToken(
+
+    ) throws Exception {
+        UserEntity user = userAuthenticationUtility.find();
         String token = jwtUtility.generateJWT(user.getId());
         return new LoginUserResponse(
                 "Token refreshed",

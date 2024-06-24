@@ -1,20 +1,19 @@
 package com.backend.app.models.dtos.common;
-
-import com.backend.app.exceptions.DtoException;
+import javax.validation.constraints.*;
 import lombok.*;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class PaginationDto {
-    private int page;
-    private int limit;
+    @NotNull(message = "Page is required")
+    @Min(value = 1, message = "Page must be greater than 0")
+    @Max(value = 100, message = "Page must be less than 100")
+    protected int page;
 
-    public static DtoException<PaginationDto> create(int page, int limit) {
-        if (page < 1 || page > 100) return new DtoException<>("Invalid page, must be between 1 and 100", null);
-        if (limit < 1 || limit > 100) return new DtoException<>("Invalid limit, must be between 1 and 100", null);
-        return new DtoException<>(null, new PaginationDto(page, limit));
-    }
+    @NotNull(message = "Limit is required")
+    @Min(value = 1, message = "Limit must be greater than 0")
+    @Max(value = 100, message = "Limit must be less than 100")
+    protected int limit;
 }
 
