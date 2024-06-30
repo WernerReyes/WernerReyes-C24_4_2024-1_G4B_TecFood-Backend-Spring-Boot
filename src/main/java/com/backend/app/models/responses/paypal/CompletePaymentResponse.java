@@ -6,10 +6,10 @@ import com.paypal.orders.Order;
 
 @JsonPropertyOrder({
         "message",
-        "order"
+        "id"
 })
 public record CompletePaymentResponse(
         String message,
-        Order order
+        String id
 ) {
 }

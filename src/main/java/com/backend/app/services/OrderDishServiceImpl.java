@@ -117,6 +117,12 @@ public class OrderDishServiceImpl implements IOrderDishService {
     }
 
     @Override
+    public OrderDishEntity findById(Long id) {
+        return orderDishRepository.findById(id).orElseThrow(
+                () -> CustomException.badRequest("Order not found")
+        );
+    }
+    @Override
     public FindOrderDishesByUserResponse findOrderDishesByUser(FindOrderDishesByUserDto findOrderDishesByUserDto) {
         Pageable pageable = PageRequest.of(findOrderDishesByUserDto.getPage() - 1, findOrderDishesByUserDto.getLimit());
         Page<OrderDishEntity> orders = filters(pageable, findOrderDishesByUserDto);

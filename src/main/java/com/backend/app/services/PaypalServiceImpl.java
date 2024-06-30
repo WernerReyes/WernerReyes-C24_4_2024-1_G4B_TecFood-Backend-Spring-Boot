@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,10 +33,14 @@ public class PaypalServiceImpl implements IPaypalService {
     private OrderDishItemRepository orderDishItemRepository;
 
     public CreatePaymentResponse createPayment(CreatePaymentDto createPaymentDto) {
+        System.out.println("createPaymentDto = " + createPaymentDto.getOrderDishId());
         OrderDishEntity orderDish = orderDishRepository.findById(createPaymentDto.getOrderDishId()).orElseThrow(() -> CustomException.notFound("Order not found"));
         List<Item> items = new ArrayList<>(orderDishItemRepository.findByOrderDish(orderDish).stream().map(orderDishItem -> new Item().name(orderDishItem.getDish().getName()).unitAmount(new Money().currencyCode("USD").value(String.valueOf(fromSolesToDollars(orderDishItem.getDish().getPrice())))).quantity(String.valueOf(orderDishItem.getQuantity()))).toList());
 
         double totalAmount = items.stream().mapToDouble(item -> Double.parseDouble(item.unitAmount().value()) * Integer.parseInt(item.quantity())).sum();
+        BigDecimal totalAmountBD = BigDecimal.valueOf(totalAmount);
+        totalAmountBD = totalAmountBD.setScale(2, RoundingMode.HALF_UP);
+        totalAmount = totalAmountBD.doubleValue();
 
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.checkoutPaymentIntent("CAPTURE");
@@ -57,6 +63,7 @@ public class PaypalServiceImpl implements IPaypalService {
 
             return new CreatePaymentResponse("Payment created", id);
         } catch (IOException e) {
+            System.out.println("e = " + e.getMessage());
             throw CustomException.internalServerError("Error creating payment");
         }
     }
@@ -70,9 +77,7 @@ public class PaypalServiceImpl implements IPaypalService {
 
             HttpResponse<Order> httpResponse = payPalHttpClient.execute(ordersCaptureRequest);
             if (httpResponse.result().status() != null) {
-                Order order = gerOrderDetails(orderId);
-                System.out.println("Order status: " + order);
-                return new CompletePaymentResponse("Payment completed", order);
+                return new CompletePaymentResponse("Payment completed", httpResponse.result().id());
             }
         } catch (IOException e) {
             throw CustomException.internalServerError("Error completing payment");
@@ -81,15 +86,6 @@ public class PaypalServiceImpl implements IPaypalService {
         throw CustomException.internalServerError("Error completing payment");
     }
 
-    private Order gerOrderDetails(String orderId) {
-        OrdersGetRequest ordersGetRequest = new OrdersGetRequest(orderId);
-        try {
-            HttpResponse<Order> httpResponse = payPalHttpClient.execute(ordersGetRequest);
-            return httpResponse.result();
-        } catch (IOException e) {
-            throw CustomException.internalServerError("Error getting order details");
-        }
-    }
 
     private double fromSolesToDollars(double soles) {
         return Math.round((soles / 3.8) * 100.0) / 100.0;

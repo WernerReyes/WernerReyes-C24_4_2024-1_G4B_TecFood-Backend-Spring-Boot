@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.List;
 
 @JsonPropertyOrder({"message","dishes", "currentPage", "totalPages", "limit", "total", "next", "previous"})
-public record GetDishesResponse(
+public record FindDishesResponse(
         String message
         , List<DishEntity> dishes
         , int currentPage

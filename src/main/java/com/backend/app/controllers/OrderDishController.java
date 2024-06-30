@@ -7,6 +7,7 @@ import com.backend.app.models.dtos.orderDish.UpdateOrderDishStatusDto;
 import com.backend.app.models.responses.orderDish.CreateOrderDishResponse;
 import com.backend.app.models.responses.orderDish.FindOrderDishesByUserResponse;
 import com.backend.app.models.responses.orderDish.UpdateOrderDishStatusResponse;
+import com.backend.app.persistence.entities.OrderDishEntity;
 import com.backend.app.persistence.enums.EOrderDishStatus;
 import com.backend.app.services.OrderDishServiceImpl;
 import com.backend.app.utilities.DtoValidatorUtility;
@@ -42,6 +43,13 @@ public class OrderDishController {
         return new ResponseEntity<>(orderDishServiceImpl.updateOrderDishStatus(
                 updateOrderDishStatusDtoException.getData()
         ), HttpStatus.OK);
+    }
+
+    @GetMapping("/{orderDishId}")
+    public ResponseEntity<OrderDishEntity> findOrderDishById(
+            @PathVariable Long orderDishId
+    )  {
+        return new ResponseEntity<>(orderDishServiceImpl.findById(orderDishId), HttpStatus.OK);
     }
 
     @GetMapping("/user")

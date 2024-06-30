@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class GetDishesDto extends PaginationDto {
+public class FindDishesDto extends PaginationDto {
 
     private List<
             @Min(value = 1, message = "Category ID must be greater than 0")
@@ -26,7 +26,7 @@ public class GetDishesDto extends PaginationDto {
     @Max(value = 1000, message = "Max value must be less than 1000")
     private Integer max;
 
-    public GetDishesDto(Integer page, Integer limit, List<Long> idCategory, String search, Integer min, Integer max) {
+    public FindDishesDto(Integer page, Integer limit, List<Long> idCategory, String search, Integer min, Integer max) {
         super(page, limit);
         this.idCategory = idCategory;
         this.search = search;

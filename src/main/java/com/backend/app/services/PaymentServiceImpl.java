@@ -88,6 +88,7 @@ public class PaymentServiceImpl implements IPaymentService {
             String text = "Dear " + user.getFirstName() +  ", Attached is the invoice for your recent purchase. Please review the details and contact us if you need any clarification. Thank you for your purchase!";
 
             emailUtility.sendEmailWithAttachment(
+                "invoice-" + orderDish.getId(),
                 user.getEmail(),
                 subject,
                 text,

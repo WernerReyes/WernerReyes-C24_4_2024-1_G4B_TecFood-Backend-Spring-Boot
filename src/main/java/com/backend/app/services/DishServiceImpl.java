@@ -2,10 +2,12 @@ package com.backend.app.services;
 
 import com.backend.app.exceptions.CustomException;
 import com.backend.app.models.IDishService;
-import com.backend.app.models.dtos.dish.GetDishesDto;
-import com.backend.app.models.responses.dish.GetDishResponse;
-import com.backend.app.models.responses.dish.GetDishesResponse;
-import com.backend.app.models.responses.dish.GetDishesToSearchResponse;
+import com.backend.app.models.dtos.dish.FindDishesDto;
+import com.backend.app.models.dtos.dish.FindDishesWithoutSelectedDishDto;
+import com.backend.app.models.responses.dish.FindDishResponse;
+import com.backend.app.models.responses.dish.FindDishesResponse;
+import com.backend.app.models.responses.dish.FindDishesToSearchResponse;
+import com.backend.app.models.responses.dish.FindDishesWithoutSelectedDishResponse;
 import com.backend.app.persistence.entities.DishEntity;
 import com.backend.app.persistence.repositories.DishRepository;
 import com.backend.app.persistence.specifications.DishSpecification;
@@ -26,62 +28,77 @@ public class DishServiceImpl implements IDishService {
     private DishRepository dishRepository;
 
     @Override
-    public GetDishesResponse findAll(GetDishesDto getDishesDto) {
-        Pageable pageable = PageRequest.of(getDishesDto.getPage() - 1, getDishesDto.getLimit());
-        Page<DishEntity> dishes = filters(pageable, getDishesDto);
+    public FindDishesResponse findAll(FindDishesDto findDishesDto) {
+        Pageable pageable = PageRequest.of(findDishesDto.getPage() - 1, findDishesDto.getLimit());
+        Page<DishEntity> dishes = filters(pageable, findDishesDto);
         int total = (int) dishes.getTotalElements();
 
-        return new GetDishesResponse(
+        return new FindDishesResponse(
                 "All products",
                 dishes.getContent(),
-                getDishesDto.getPage(),
+                findDishesDto.getPage(),
                 dishes.getTotalPages(),
-                getDishesDto.getLimit(),
+                findDishesDto.getLimit(),
                 total,
-                dishes.hasNext() ? "/api/dish?page=" + (getDishesDto.getPage() + 1) + "&limit=" + getDishesDto.getLimit() : null,
-                dishes.hasPrevious() ? "/api/dish?page=" + (getDishesDto.getPage() - 1) + "&limit=" + getDishesDto.getLimit() : null
+                dishes.hasNext() ? "/api/dish?page=" + (findDishesDto.getPage() + 1) + "&limit=" + findDishesDto.getLimit() : null,
+                dishes.hasPrevious() ? "/api/dish?page=" + (findDishesDto.getPage() - 1) + "&limit=" + findDishesDto.getLimit() : null
             );
     }
 
     @Override
-    public GetDishesToSearchResponse findAllToSearch() {
+    public FindDishesToSearchResponse findAllToSearch() {
         List<DishEntity> dishes = dishRepository.findAll();
-        return new GetDishesToSearchResponse(
+        return new FindDishesToSearchResponse(
                 "All products to search",
                 dishes
         );
     }
 
     @Override
-    public GetDishResponse findById(Long id) {
+    public FindDishesWithoutSelectedDishResponse findAllWithoutSelectedDish(FindDishesWithoutSelectedDishDto dto) {
+        Specification<DishEntity> spec = Specification.where(
+                DishSpecification.idNotEqual(dto.getSelectedDishId())
+        );
+
+        Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getLimit());
+        Page<DishEntity> dishes = dishRepository.findAll(spec, pageable);
+
+        return new FindDishesWithoutSelectedDishResponse(
+                "All products without selected product",
+                dishes.getContent()
+        );
+    }
+
+    @Override
+    public FindDishResponse findById(Long id) {
         DishEntity dish = dishRepository.findById(id).orElse(null);
         if (dish  == null) throw CustomException.badRequest("Product not found");
 
-        return new GetDishResponse(
+        return new FindDishResponse(
                 "Product found",
                 dish
         );
     }
 
     @Override
-    public GetDishResponse findByName(String name) {
+    public FindDishResponse findByName(String name) {
         DishEntity dish = dishRepository.findByName(name);
         if (dish  == null) throw CustomException.badRequest("Product not found");
 
-        return new GetDishResponse(
+        return new FindDishResponse(
                 "Product found",
                 dish
         );
     }
 
 
-    private Page<DishEntity> filters(Pageable pageable,GetDishesDto getDishesDto) {
+    private Page<DishEntity> filters(Pageable pageable, FindDishesDto findDishesDto) {
         Specification<DishEntity> spec = Specification.where(
-                DishSpecification.idDishCategoryIn(getDishesDto.getIdCategory())
+                DishSpecification.idDishCategoryIn(findDishesDto.getIdCategory())
         ).and(
-                DishSpecification.priceBetween(getDishesDto.getMin(), getDishesDto.getMax())
+                DishSpecification.priceBetween(findDishesDto.getMin(), findDishesDto.getMax())
         ).and(
-                DishSpecification.nameContaining(getDishesDto.getSearch())
+                DishSpecification.nameContaining(findDishesDto.getSearch())
         );
         return dishRepository.findAll(spec, pageable);
     }

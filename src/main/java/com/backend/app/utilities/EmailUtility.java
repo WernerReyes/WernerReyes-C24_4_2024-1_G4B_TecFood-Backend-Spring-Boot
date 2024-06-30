@@ -30,7 +30,7 @@ public class EmailUtility {
         javaMailSender.send(message);
     }
 
-    public void sendEmailWithAttachment(String to, String subject, String text, String attachmentUrl)  {
+    public void sendEmailWithAttachment(String fileName, String to, String subject, String text, String attachmentUrl)  {
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -41,7 +41,7 @@ public class EmailUtility {
 
             // Download the attachment PDF from the URL
             UrlResource resource = new UrlResource(attachmentUrl);
-            helper.addAttachment("invoice.pdf", resource);
+            helper.addAttachment(fileName + ".pdf", resource);
 
             System.out.println("Sending email with attachment..." + from);
 

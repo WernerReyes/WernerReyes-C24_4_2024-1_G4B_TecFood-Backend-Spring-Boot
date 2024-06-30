@@ -14,6 +14,12 @@ public class DishSpecification {
         };
     }
 
+    public static Specification<DishEntity>  idNotEqual(Long id) {
+        return (root, query, criteriaBuilder) -> {
+            if (id == null) return criteriaBuilder.conjunction();
+            return criteriaBuilder.notEqual(root.get("idDish"), id);
+        };
+    }
     public static Specification<DishEntity> priceBetween(Integer min, Integer max) {
         return (root, query, criteriaBuilder) -> {
             if (min == null && max == null) return criteriaBuilder.conjunction();
