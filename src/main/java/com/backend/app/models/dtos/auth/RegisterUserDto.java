@@ -25,14 +25,13 @@ public class RegisterUserDto {
     private String password;
 
     @Pattern(
-            regexp = RegularExpUtility.PHONE_NUMBER_REGEX,
+            regexp = RegularExpUtility.PHONE_NUMBER_OPTIONAL_REGEX,
             message = "Phone number must have at least 9 characters"
     )
     private String phoneNumber;
 
-
     @Pattern(
-            regexp = RegularExpUtility.DNI_REGEX,
+            regexp = RegularExpUtility.DNI_OPTIONAL_REGEX,
             message = "DNI must have at least 8 characters"
     )
     private String dni;

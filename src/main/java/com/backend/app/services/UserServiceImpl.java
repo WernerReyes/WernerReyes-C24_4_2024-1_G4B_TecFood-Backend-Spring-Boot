@@ -45,13 +45,10 @@ public class UserServiceImpl implements IUserService {
     @Override
     public UpdateUserResponse updateUser(UpdateUserDto updateUserDto) {
         UserEntity user = userAuthenticationUtility.find();
+        user.setPhoneNumber(updateUserDto.getPhoneNumber().isEmpty() ? null : updateUserDto.getPhoneNumber());
+        user.setDni(updateUserDto.getDni().isEmpty() ? null : updateUserDto.getDni());
 
         if(isTheSameData(user, updateUserDto)) throw CustomException.badRequest("You must change at least one field");
-
-        if(updateUserDto.getFirstName() != null) user.setFirstName(updateUserDto.getFirstName());
-        if(updateUserDto.getLastName() != null) user.setLastName(updateUserDto.getLastName());
-        if(updateUserDto.getPhoneNumber() != null) user.setPhoneNumber(updateUserDto.getPhoneNumber());
-        if(updateUserDto.getDni() != null) user.setDni(updateUserDto.getDni());
 
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);

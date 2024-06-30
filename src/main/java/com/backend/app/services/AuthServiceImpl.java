@@ -88,7 +88,9 @@ public class AuthServiceImpl implements IAuthService {
         UserEntity user = userRepository.findByEmail(registerUserDto.getEmail());
         if (user != null) throw CustomException.badRequest("Email already exists");
 
-        if(registerUserDto.getDni() != null) {
+        System.out.println("dni: " + registerUserDto.getDni().isEmpty());
+
+        if(registerUserDto.getDni() != null && !registerUserDto.getDni().isEmpty()) {
             user = userRepository.findByDni(registerUserDto.getDni());
             if (user != null) throw CustomException.badRequest("DNI already exists");
         }
@@ -99,8 +101,8 @@ public class AuthServiceImpl implements IAuthService {
                 .role(roleRepository.findByName(ERole.ROLE_USER))
                 .firstName(registerUserDto.getFirstName())
                 .lastName(registerUserDto.getLastName())
-                .phoneNumber(registerUserDto.getPhoneNumber())
-                .dni(registerUserDto.getDni())
+                .phoneNumber(registerUserDto.getPhoneNumber().isEmpty() ? null : registerUserDto.getPhoneNumber())
+                .dni(registerUserDto.getDni().isEmpty() ? null : registerUserDto.getDni())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();

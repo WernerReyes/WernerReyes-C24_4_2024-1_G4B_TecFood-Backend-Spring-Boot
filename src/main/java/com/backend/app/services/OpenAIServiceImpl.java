@@ -44,9 +44,6 @@ public class OpenAIServiceImpl implements IOpenAIService {
     @Autowired
     private UserAuthenticationUtility userAuthenticationUtility;
 
-    private List<DishEntity> dishes = new ArrayList<>();
-    private UserEntity user = new UserEntity();
-
     @Override
     public ChatResponse greetUser() {
         HttpEntity<Map<String, Object>> entity = prepareRequest(
@@ -79,15 +76,12 @@ public class OpenAIServiceImpl implements IOpenAIService {
     }
 
     private String regart() {
-        user = userAuthenticationUtility.find();
-        dishes = dishRepository.findAll();
-        return  formToFill() +  " Saluda con lo siguiente o con algo similar, pero siempre saludando y mencionando al usuario: Hola " + user.getFirstName() + " " + user.getLastName() + " Soy TecFood Bot \uD83E\uDD16, un asistente virtual que te ayudará a conocer más sobre los platillos que se ofrecen en el aplicativo. ¿En qué puedo ayudarte?" +
-                "Si gustas puedes mencionar los platillos que ofrecemos en el aplicativo para orientar al usuario, los platilos son los siguientes. Ojo si vas a mencionar que no sean todos " + dishes;
+        UserEntity user = userAuthenticationUtility.find();
+        return  formToFill() +  " Saluda con lo siguiente o con algo similar, pero siempre saludando y mencionando al usuario: Hola " + user.getFirstName() + " " + user.getLastName() + " Soy TecFood Bot \uD83E\uDD16, un asistente virtual que te ayudará a conocer más sobre los platillos que se ofrecen en el aplicativo. ¿En qué puedo ayudarte?";
     }
 
     private String instructions() {
-        if (user == null) user = userAuthenticationUtility.find();
-        if(dishes.isEmpty()) dishes = dishRepository.findAll();
+        List<DishEntity> dishes = dishRepository.findAll();
         return  formToFill() + "Tu eres un asiste de una aplicacion llamada TecFood, donde brindaras información de " +
                 "los platillos que se ofrecen en el aplicativo, para ello, puedes preguntar por el platillo que" +
                 " desees conocer, por ejemplo: ¿Qué es el pozole? o ¿Cuál es el precio del pozole? Los platillos son los siguientes: "
@@ -98,7 +92,7 @@ public class OpenAIServiceImpl implements IOpenAIService {
     }
 
     private String formToFill() {
-        return "IMPORTANTE! Las respuestas deben ser SIEMPRE elementos html y puedes usar clases de tailwindcss para darle estilo a las respuestas si gustas, dentro de un className. Ejemplo: <div className='bg-blue-500 text-white p-2'>Hola</div>. Recuerda que las respuestas deben ser en formato HTML. Continua con lo siguiente: ";
+        return "IMPORTANTE! Las respuestas deben ser SIEMPRE elementos html y puedes usar clases de tailwindcss para darle estilo a las respuestas si gustas, dentro de un className. Ejemplo: <div className=''>Hola</div>. Recuerda que las respuestas deben ser en formato HTML. Continua con lo siguiente: ";
     }
 
 
