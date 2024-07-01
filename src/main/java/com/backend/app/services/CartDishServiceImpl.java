@@ -2,48 +2,48 @@ package com.backend.app.services;
 
 import com.backend.app.exceptions.CustomException;
 import com.backend.app.models.ICartDishService;
-import com.backend.app.models.dtos.card.AddToCartDto;
-import com.backend.app.models.responses.cartDish.*;
+import com.backend.app.models.dtos.requests.cartDish.AddToCartRequest;
+import com.backend.app.models.dtos.responses.cartDish.*;
+import com.backend.app.models.dtos.responses.common.ApiResponse;
 import com.backend.app.persistence.entities.CartDishEntity;
 import com.backend.app.persistence.entities.DishEntity;
 import com.backend.app.persistence.entities.UserEntity;
+import com.backend.app.persistence.enums.EResponseStatus;
 import com.backend.app.persistence.repositories.CartDishRepository;
 import com.backend.app.persistence.repositories.DishRepository;
-import com.backend.app.utilities.UserAuthenticationUtility;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.backend.app.utilities.UsageStatusUtility;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class CartDishServiceImpl implements ICartDishService {
 
-    @Autowired
-    private CartDishRepository cartDishRepository;
+    private final CartDishRepository cartDishRepository;
+    private final DishRepository dishRepository;
+    private final UserAuthenticationService userAuthenticationService;
 
-    @Autowired
-    private DishRepository dishRepository;
-
-    @Autowired
-    private UserAuthenticationUtility userAuthenticationUtility;
+    private final UsageStatusUtility usageStatusUtility;
 
     @Override
-    public AddToCartResponse addOneDishToCart(Long dishId) {
-        UserEntity user = userAuthenticationUtility.find();
-        FindDishesToCartResponse dishesByUser = findDishesCartByUser();
-        if (dishesByUser.totalQuantity() + 1 > 5) throw CustomException.badRequest("You can't add more than 5 dishes");
+    public ApiResponse<CartDishEntity> addOneDishToCart(Long dishId) {
+        UserEntity user = userAuthenticationService.find();
+        ApiResponse<FindDishesToCartByUserResponse> dishesByUser = findDishesCartByUser();
+        if (dishesByUser.data().totalQuantity() + 1 > 5) throw CustomException.badRequest("You can't add more than 5 dishes");
 
         DishEntity dish = dishRepository.findById(dishId).orElse(null);
         if (dish == null) throw CustomException.badRequest("Dish not found");
 
         CartDishEntity cart = cartDishRepository.findByUserAndDish(user, dish);
         if (cart != null) {
-            System.out.println(cart.getQuantity());
             if(cart.getQuantity() + 1 > 5) throw CustomException.badRequest("You can't add more than 5 dishes");
             cart.setQuantity(cart.getQuantity() + 1);
             cartDishRepository.save(cart);
-            return new AddToCartResponse(
-                    cart.getDish().getName() + " added to cart",
+            return new ApiResponse<>(
+                    EResponseStatus.SUCCESS,
+                    "Dish added to cart",
                     cart
             );
         }
@@ -55,47 +55,56 @@ public class CartDishServiceImpl implements ICartDishService {
                 .build();
         cartDishRepository.save(cart);
 
-        return new AddToCartResponse(
-                cart.getDish().getName() + " added to cart",
+        //* Update dish usage status
+        usageStatusUtility.updateDishUsageStatus(dish);
+
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
+                "Dish added to cart",
                 cart
         );
     }
 
     @Override
-    public AddToCartResponse addManyDishesToCart(AddToCartDto addToCartDto)  {
-        UserEntity user = userAuthenticationUtility.find();
+    public ApiResponse<CartDishEntity> addManyDishesToCart(AddToCartRequest addToCartRequest)  {
+        UserEntity user = userAuthenticationService.find();
 
-        DishEntity dish = dishRepository.findById(addToCartDto.getDishId()).orElse(null);
+        DishEntity dish = dishRepository.findById(addToCartRequest.getDishId()).orElse(null);
         if (dish == null) throw CustomException.badRequest("Dish not found");
 
         CartDishEntity cart = cartDishRepository.findByUserAndDish(user, dish);
         if (cart != null) {
-            if(cart.getQuantity() + addToCartDto.getQuantity() > 5) throw CustomException.badRequest("You can't add more than 5 dishes");
-            cart.setQuantity(cart.getQuantity() + addToCartDto.getQuantity());
+            if(cart.getQuantity() + addToCartRequest.getQuantity() > 5) throw CustomException.badRequest("You can't add more than 5 dishes");
+            cart.setQuantity(cart.getQuantity() + addToCartRequest.getQuantity());
             cartDishRepository.save(cart);
-            return new AddToCartResponse(
-                    cart.getDish().getName() + " added to cart",
+            return new ApiResponse<>(
+                    EResponseStatus.SUCCESS,
+                    "Dish added to cart",
                     cart
             );
         }
 
         cart = CartDishEntity.builder()
-                .quantity(addToCartDto.getQuantity())
+                .quantity(addToCartRequest.getQuantity())
                 .dish(dish)
                 .user(user)
                 .build();
         cartDishRepository.save(cart);
 
-        return new AddToCartResponse(
-                cart.getDish().getName() + " added to cart",
+        //* Update dish usage status
+        usageStatusUtility.updateDishUsageStatus(dish);
+
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
+                "Dish added to cart",
                 cart
         );
 
     }
 
     @Override
-    public DeleteToCardResponse deleteOneDishFromCart(Long dishId) {
-        UserEntity user = userAuthenticationUtility.find();
+    public ApiResponse<Integer> deleteOneDishFromCart(Long dishId) {
+        UserEntity user = userAuthenticationService.find();
 
         DishEntity dish = dishRepository.findById(dishId).orElse(null);
         if (dish == null) throw CustomException.badRequest("Dish not found");
@@ -105,7 +114,11 @@ public class CartDishServiceImpl implements ICartDishService {
 
         if (cart.getQuantity() == 1) {
             cartDishRepository.delete(cart);
-            return new DeleteToCardResponse(
+
+            //* Update dish usage status
+            usageStatusUtility.updateDishUsageStatus(dish);
+            return new ApiResponse<>(
+                    EResponseStatus.SUCCESS,
                     "Dish deleted from cart",
                     cart.getQuantity()
             );
@@ -114,62 +127,76 @@ public class CartDishServiceImpl implements ICartDishService {
         cart.setQuantity(cart.getQuantity() - 1);
         cartDishRepository.save(cart);
 
-        return new DeleteToCardResponse(
+        //* Update dish usage status
+        usageStatusUtility.updateDishUsageStatus(dish);
+
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
                 "Dish deleted from cart",
                 cart.getQuantity()
         );
     }
 
     @Override
-    public DeleteToCardResponse deleteAllDishesFromCart(Long dishId) {
-        UserEntity user = userAuthenticationUtility.find();
+    public ApiResponse<Integer> deleteAllDishesFromCart(Long dishId) {
+        UserEntity user = userAuthenticationService.find();
 
         DishEntity dish = dishRepository.findById(dishId).orElse(null);
         if (dish == null) throw CustomException.badRequest("Dish not found");
 
         CartDishEntity cart = cartDishRepository.findByUserAndDish(user, dish);
         if (cart == null) throw CustomException.badRequest("Dish not found in cart");
+
         cartDishRepository.delete(cart);
 
-        return new DeleteToCardResponse(
+        //* Update dish usage status
+        usageStatusUtility.updateDishUsageStatus(dish);
+
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
                 "Dish deleted from cart",
                 cart.getQuantity()
         );
     }
 
     @Override
-    public FindDishesToCartResponse findDishesCartByUser() {
-        UserEntity user = userAuthenticationUtility.find();
+    public ApiResponse<FindDishesToCartByUserResponse> findDishesCartByUser() {
+        UserEntity user = userAuthenticationService.find();
+
         List<CartDishEntity> cart = cartDishRepository.findByUser(user);
         int totalQuantity = cart.stream().mapToInt(CartDishEntity::getQuantity).sum();
         if (totalQuantity > 5) throw CustomException.badRequest("You can't add more than 5 dishes");
         double totalPayment = cart.stream().mapToDouble(value -> value.getDish().getPrice() * value.getQuantity()).sum();
-        return new FindDishesToCartResponse(
-                "Dishes in cart",
-                cart,
-                totalQuantity,
-                totalPayment
-
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
+                "Dishes found in cart",
+                new FindDishesToCartByUserResponse(
+                        cart,
+                        totalQuantity,
+                        totalPayment
+                )
         );
     }
 
     @Override
-    public FindDishToCartResponse findDishToCartByDishId(Long dishId) {
-        CartDishEntity cart = cartDishRepository.findByDish_IdDish(dishId);
+    public ApiResponse<CartDishEntity> findDishToCartByDishId(Long dishId) {
+        CartDishEntity cart = cartDishRepository.findByDish_Id(dishId);
         if (cart == null) throw CustomException.badRequest("Dish not found in cart");
-        return new FindDishToCartResponse(
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
                 "Dish found in cart",
                 cart
         );
     }
 
     @Override
-    public FindTotalDishesToCartResponse findTotalDishesCartByUser() {
-        UserEntity user = userAuthenticationUtility.find();
+    public ApiResponse<Integer> findTotalDishesCartByUser() {
+        UserEntity user = userAuthenticationService.find();
         List<CartDishEntity> cart = cartDishRepository.findByUser(user);
         int totalQuantity = cart.stream().mapToInt(CartDishEntity::getQuantity).sum();
-        return new FindTotalDishesToCartResponse(
-                "Total dishes in cart",
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
+                "Total dishes found in cart",
                 totalQuantity
         );
     }

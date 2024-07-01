@@ -1,10 +1,9 @@
 package com.backend.app.models;
 
-import com.backend.app.models.dtos.paypal.CreatePaymentDto;
-import com.backend.app.models.responses.paypal.CompletePaymentResponse;
-import com.backend.app.models.responses.paypal.CreatePaymentResponse;
+import com.backend.app.models.dtos.requests.paypal.CreatePaymentRequest;
+import com.backend.app.models.dtos.responses.common.ApiResponse;
 
 public interface IPaypalService {
-    CreatePaymentResponse createPayment(CreatePaymentDto createPaymentDto);
-    CompletePaymentResponse completePayment(String orderId);
+    ApiResponse<String> createPayment(CreatePaymentRequest createPaymentRequest);
+    ApiResponse<String> completePayment(String orderId);
 }

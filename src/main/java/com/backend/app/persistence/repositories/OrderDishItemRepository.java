@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface OrderDishItemRepository extends JpaRepository<OrderDishItemEntity, Long> {
     List<OrderDishItemEntity> findByOrderDish(OrderDishEntity orderDish);
+    boolean existsByDishId(Long dishId);
 }

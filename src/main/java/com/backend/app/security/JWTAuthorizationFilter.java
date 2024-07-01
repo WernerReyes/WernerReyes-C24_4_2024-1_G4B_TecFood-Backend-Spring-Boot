@@ -1,57 +1,62 @@
 package com.backend.app.security;
 
+import com.backend.app.exceptions.CustomException;
 import com.backend.app.utilities.JwtUtility;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jwt.JWTClaimsSet;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import java.nio.file.AccessDeniedException;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.text.ParseException;
-import java.util.Collections;
-
+@RequiredArgsConstructor
+@Component
 public class JWTAuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtUtility jwtUtility;
-    public JWTAuthorizationFilter(JwtUtility jwtUtility) {
-        this.jwtUtility = jwtUtility;
-    }
+    private final UserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        System.out.println("Header: " + header);
-        if (header == null || !header.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String token = header.substring(7); // Extract the token excluding "Bearer "
-
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            {
         try {
-            JWTClaimsSet claims = jwtUtility.parseJWT(token);
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(claims.getSubject(), null, Collections.emptyList());
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        } catch (JOSEException | ParseException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        } catch (InvalidKeySpecException e) {
-            throw new RuntimeException(e);
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            String token = authHeader.substring(7); // Extract the token excluding "Bearer "
+            Long userId = jwtUtility.getUserIdFromJWT(token);
+
+            //  If any accessToken is present, then it will validate the token and then authenticate the request in security context
+            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userId.toString());
+                if (jwtUtility.validateToken(token, userDetails)) {
+                    UsernamePasswordAuthenticationToken authenticationToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                }
+            }
+
+            filterChain.doFilter(request, response);
+        } catch (AccessDeniedException e) {
+            throw CustomException.forbidden(e.getMessage());
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        filterChain.doFilter(request, response);
     }
+
+
 
 }

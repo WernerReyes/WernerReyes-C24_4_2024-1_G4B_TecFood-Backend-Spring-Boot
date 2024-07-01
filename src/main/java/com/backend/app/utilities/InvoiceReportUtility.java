@@ -4,37 +4,30 @@ import com.backend.app.persistence.entities.*;
 import com.backend.app.persistence.repositories.OrderDishItemRepository;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanArrayDataSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ResourceUtils;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@RequiredArgsConstructor
 @Component
 public class InvoiceReportUtility {
 
-    @Autowired
-    private OrderDishItemRepository orderDishItemRepository;
+    private final OrderDishItemRepository orderDishItemRepository;
 
     public JasperPrint generateReport(
             UserEntity user,
             OrderDishEntity orderDish,
             PaymentEntity payment
-    ) throws FileNotFoundException, JRException {
+    ) throws JRException {
+        final InputStream reportStream = this.getClass().getResourceAsStream("/reports/UserInvoiceReport.jrxml");
+        final JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
 
-
-
-        final File file = ResourceUtils.getFile("classpath:reports/UserInvoiceReport.jrxml");
-        final JasperReport jasperReport = JasperCompileManager.compileReport(file.getAbsolutePath());
-
-        final File logoCompany = ResourceUtils.getFile("classpath:reports/images/logoCompany.png");
+        InputStream logoStream = this.getClass().getResourceAsStream("/reports/images/logoCompany.png");
 
         List<OrderDishItemEntity> orderDishItems = orderDishItemRepository.findByOrderDish(orderDish);
 
@@ -42,7 +35,7 @@ public class InvoiceReportUtility {
 
         // Generate report
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("logoCompany", new FileInputStream(logoCompany));
+        parameters.put("logoCompany", logoStream);
         parameters.put("firstName", user.getFirstName());
         parameters.put("lastName", user.getLastName());
         parameters.put("dni", user.getDni() != null ? user.getDni() : "No registered");

@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -19,7 +22,7 @@ public class PaymentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="payment_id")
-    private Long paymentId;
+    private Long id;
 
     @Column(name="amount")
     private Double amount;
@@ -31,6 +34,11 @@ public class PaymentEntity {
     @Column(name="status")
     @Enumerated(EnumType.STRING)
     private EPaymentStatus status;
+
+    @CreatedDate
+    @Column(name="created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "order_dish_id", nullable = false, updatable = false)

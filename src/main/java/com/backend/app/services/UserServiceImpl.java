@@ -1,104 +1,106 @@
 package com.backend.app.services;
 
 import com.backend.app.exceptions.CustomException;
-import com.backend.app.models.dtos.user.UpdateUserDto;
-import com.backend.app.models.dtos.user.UploadProfileDto;
-import com.backend.app.models.responses.user.UpdateUserResponse;
-import com.backend.app.models.responses.user.UploadProfileResponse;
+import com.backend.app.models.IUploadFileService;
+import com.backend.app.models.dtos.requests.common.UploadImagesRequest;
+import com.backend.app.models.dtos.requests.user.UpdateUserRequest;
+import com.backend.app.models.dtos.responses.common.ApiResponse;
 import com.backend.app.persistence.entities.UserEntity;
+import com.backend.app.persistence.enums.EResponseStatus;
 import com.backend.app.persistence.repositories.UserRepository;
 import com.backend.app.models.IUserService;
-import com.backend.app.utilities.CloudinaryUtility;
-import com.backend.app.utilities.UserAuthenticationUtility;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.backend.app.utilities.ValidationsUtility;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
+@RequiredArgsConstructor
 @Service
 public class UserServiceImpl implements IUserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private CloudinaryUtility cloudinaryUtility;
-
-    @Autowired
-    private UserAuthenticationUtility userAuthenticationUtility;
+    private final UserAuthenticationService userAuthenticationService;
+    private final IUploadFileService uploadFileService;
 
     @Override
-    public List<UserEntity> findAll() {
-        return userRepository.findAll();
+    public ApiResponse<List<UserEntity>> findAll() {
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
+                "Users found",
+                userRepository.findAll()
+        );
     }
 
     @Override
-    public UserEntity findById(Long id) {
-        return userRepository.findById(id).orElseThrow(
+    public ApiResponse<UserEntity> findById(Long id) {
+        UserEntity user = userRepository.findById(id).orElseThrow(
                 () -> CustomException.badRequest("User not found")
         );
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
+                "User found",
+                user
+        );
     }
 
     @Override
-    public UpdateUserResponse updateUser(UpdateUserDto updateUserDto) {
-        UserEntity user = userAuthenticationUtility.find();
-        user.setPhoneNumber(updateUserDto.getPhoneNumber().isEmpty() ? null : updateUserDto.getPhoneNumber());
-        user.setDni(updateUserDto.getDni().isEmpty() ? null : updateUserDto.getDni());
+    public ApiResponse<UserEntity> updateUser(UpdateUserRequest updateUserRequest) {
+        UserEntity user = userAuthenticationService.find();
 
-        if(isTheSameData(user, updateUserDto)) throw CustomException.badRequest("You must change at least one field");
+        if(isTheSameData(user, updateUserRequest)) throw CustomException.badRequest("You must change at least one field");
 
+        if(user.getPhoneNumber() != null && !StringUtils.hasText(updateUserRequest.getPhoneNumber())) throw CustomException.badRequest("You can't change your phone number");
+        if(user.getDni() != null && !StringUtils.hasText(updateUserRequest.getDni())) throw CustomException.badRequest("You can't change your dni");
+
+        user.setFirstName(updateUserRequest.getFirstName());
+        user.setLastName(updateUserRequest.getLastName());
+        user.setPhoneNumber(ValidationsUtility.hasText(updateUserRequest.getPhoneNumber()));
+        user.setDni(ValidationsUtility.hasText(updateUserRequest.getDni()));
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
-        return new UpdateUserResponse(
-                "Your data has been updated"
+
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
+                "Data updated successfully",
+                user
         );
     }
 
     @Override
-    public UploadProfileResponse uploadProfile(UploadProfileDto uploadProfileDto) {
-        UserEntity user = userAuthenticationUtility.find();
-        
-        String url = cloudinaryUtility.uploadFile(
-                uploadProfileDto.getFile()
-                ,uploadProfileDto.getTypeFile()
-                , uploadProfileDto.getTypeFolder()
-                , user.getId().intValue());
-        user.setImgUrl(url);
-        userRepository.save(user);
+    public ApiResponse<String> uploadProfile(UploadImagesRequest uploadImagesRequest) {
+        UserEntity user = userAuthenticationService.find();
+        try {
+            if(uploadImagesRequest.getFiles().size() > 1) throw CustomException.badRequest("You can only upload one image");
+            //* Delete previous image
+            if(user.getImgUrl() != null) uploadFileService.deleteFile(user.getImgUrl(), uploadImagesRequest.getTypeFile());
 
-
-        return new UploadProfileResponse(
-                "Profile image uploaded",
+            String url = uploadFileService.uploadFile(
+                uploadImagesRequest.getFiles().get(0),
+                uploadImagesRequest.getTypeFile()
+                );
+            user.setImgUrl(url);
+            userRepository.save(user);
+            return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
+                "Image uploaded successfully",
                 url
-        );
+            );
+        } catch (Exception e) {
+            throw CustomException.badRequest("Error uploading image, try again later");
+        }
     }
 
-    private boolean isTheSameData(UserEntity user, UpdateUserDto updateUserDto) {
-        return (user.getFirstName() != null && user.getFirstName().equals(updateUserDto.getFirstName())) &&
-                (user.getLastName() != null && user.getLastName().equals(updateUserDto.getLastName())) &&
-                (user.getPhoneNumber() != null && user.getPhoneNumber().equals(updateUserDto.getPhoneNumber())) &&
-                (user.getDni() != null && user.getDni().equals(updateUserDto.getDni()));
+    private boolean isTheSameData(UserEntity user, UpdateUserRequest updateUserRequest) {
+        return (user.getFirstName() != null && user.getFirstName().equals(updateUserRequest.getFirstName())) &&
+                (user.getLastName() != null && user.getLastName().equals(updateUserRequest.getLastName())) &&
+                (Objects.equals(user.getPhoneNumber(), ValidationsUtility.hasText(updateUserRequest.getPhoneNumber())) &&
+                (Objects.equals(user.getDni(), ValidationsUtility.hasText(updateUserRequest.getDni()))));
     }
-
-
-
-
-
-
-
-    /*
-    @Transactional
-    @Override
-    public void delete(User user) {
-
-        userRepository.delete(user);
-
-    }
-    */
-
 
 
 }

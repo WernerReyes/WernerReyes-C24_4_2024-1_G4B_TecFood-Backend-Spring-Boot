@@ -1,54 +1,46 @@
 package com.backend.app.controllers;
 
-import com.backend.app.exceptions.CustomException;
-import com.backend.app.exceptions.DtoException;
-import com.backend.app.models.dtos.auth.LoginGoogleUserDto;
-import com.backend.app.models.dtos.auth.LoginUserDto;
-import com.backend.app.models.dtos.auth.RegisterUserDto;
-import com.backend.app.models.responses.auth.LoginUserResponse;
-import com.backend.app.models.responses.auth.RegisterUserResponse;
-import com.backend.app.services.AuthServiceImpl;
-import com.backend.app.utilities.DtoValidatorUtility;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.backend.app.models.IAuthService;
+import com.backend.app.models.dtos.requests.auth.LoginGoogleRequest;
+import com.backend.app.models.dtos.requests.auth.LoginRequest;
+import com.backend.app.models.dtos.requests.auth.RegisterRequest;
+import com.backend.app.models.dtos.responses.auth.*;
+import com.backend.app.models.dtos.responses.common.ApiResponse;
+import com.backend.app.persistence.entities.UserEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthServiceImpl authServiceImpl;
+    private final IAuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterUserResponse> register(@RequestBody RegisterUserDto registerUserDto) {
-        DtoException<RegisterUserDto> registerUserDtoException = DtoValidatorUtility.validate(registerUserDto);
-        if(registerUserDtoException.getError() != null) throw CustomException.badRequest(registerUserDtoException.getError());
-        return new ResponseEntity<>(authServiceImpl.register(registerUserDtoException.getData()), HttpStatus.OK);
+    public ResponseEntity<ApiResponse<Void>> register(@RequestBody RegisterRequest registerRequest) {
+        return new ResponseEntity<>(authService.register(registerRequest), HttpStatus.OK);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginUserResponse> login(@RequestBody  LoginUserDto loginUserDto ) throws Exception {
-        DtoException<LoginUserDto> loginUserDtoException = DtoValidatorUtility.validate(loginUserDto);
-        if(loginUserDtoException.getError() != null) throw CustomException.badRequest(loginUserDtoException.getError());
-        return new ResponseEntity<>(authServiceImpl.login(loginUserDtoException.getData()), HttpStatus.OK);
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest loginRequest) throws Exception {
+        return new ResponseEntity<>(authService.login(loginRequest), HttpStatus.OK);
     }
 
     @PostMapping("/login-google")
-    public ResponseEntity<LoginUserResponse> loginGoogle(@RequestBody LoginGoogleUserDto loginGoogleUserDto) throws Exception {
-        DtoException<LoginGoogleUserDto> loginGoogleUserDtoException = DtoValidatorUtility.validate(loginGoogleUserDto);
-        if(loginGoogleUserDtoException.getError() != null) throw CustomException.badRequest(loginGoogleUserDtoException.getError());
-        return new ResponseEntity<>(authServiceImpl.loginGoogle(loginGoogleUserDtoException.getData()), HttpStatus.OK);
+    public ResponseEntity<ApiResponse<LoginResponse>> loginGoogle(@RequestBody LoginGoogleRequest loginGoogleRequest) throws Exception {
+        return new ResponseEntity<>(authService.loginGoogle(loginGoogleRequest), HttpStatus.OK);
     }
 
     @PostMapping("/renovate-token")
-    public ResponseEntity<LoginUserResponse> renovateToken(@RequestParam String expiredToken) throws Exception {
-        return new ResponseEntity<>(authServiceImpl.renovateToken(expiredToken), HttpStatus.OK);
+    public ResponseEntity<ApiResponse<String>> renovateToken(@RequestParam String expiredToken) throws Exception {
+        return new ResponseEntity<>(authService.renovateToken(expiredToken), HttpStatus.OK);
     }
 
     @GetMapping("/revalidate-token")
-    public ResponseEntity<LoginUserResponse> revalidateToken() throws Exception {
-        return new ResponseEntity<>(authServiceImpl.revalidateToken(), HttpStatus.OK);
+    public ResponseEntity<ApiResponse<UserEntity>> revalidateToken() {
+        return new ResponseEntity<>(authService.revalidateToken(), HttpStatus.OK);
     }
 }

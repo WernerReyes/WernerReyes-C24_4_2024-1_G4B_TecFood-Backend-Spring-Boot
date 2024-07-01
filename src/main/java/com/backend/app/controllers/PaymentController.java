@@ -1,48 +1,39 @@
 package com.backend.app.controllers;
 
-import com.backend.app.exceptions.CustomException;
-import com.backend.app.exceptions.DtoException;
-import com.backend.app.models.dtos.payment.FindPaymentByUserDto;
-import com.backend.app.models.dtos.payment.ProcessPaymentDto;
-import com.backend.app.models.responses.payment.FindPaymentByUserResponse;
-import com.backend.app.models.responses.payment.ProcessPaymentResponse;
+import com.backend.app.models.IPaymentService;
+import com.backend.app.models.dtos.requests.payment.FindPaymentByUserRequest;
+import com.backend.app.models.dtos.requests.payment.ProcessPaymentRequest;
+import com.backend.app.models.dtos.responses.common.ApiResponse;
+import com.backend.app.models.dtos.responses.common.PagedResponse;
+import com.backend.app.persistence.entities.PaymentEntity;
 import com.backend.app.persistence.enums.payment.EPaymentStatus;
-import com.backend.app.services.PaymentServiceImpl;
-import com.backend.app.utilities.DtoValidatorUtility;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/payment")
 public class PaymentController {
 
-    @Autowired
-    PaymentServiceImpl paymentServiceImpl;
+    private final IPaymentService paymentService;
 
     @PostMapping("/process")
-    public ResponseEntity<ProcessPaymentResponse> processPayment(
-            @RequestBody ProcessPaymentDto processPaymentDto
+    public ResponseEntity<ApiResponse<PaymentEntity>> processPayment(
+            @RequestBody ProcessPaymentRequest processPaymentRequest
     ) {
-        DtoException<ProcessPaymentDto> processPaymentDtoException = DtoValidatorUtility.validate(processPaymentDto);
-        if (processPaymentDtoException.getError() != null)
-            throw CustomException.badRequest(processPaymentDtoException.getError());
-        return new ResponseEntity<>(paymentServiceImpl.processPayment(processPaymentDtoException.getData()), HttpStatus.OK);
+        return new ResponseEntity<>(paymentService.processPayment(processPaymentRequest), HttpStatus.OK);
     }
 
     @GetMapping("/user")
-    public ResponseEntity<FindPaymentByUserResponse> findPaymentByUser(
+    public ResponseEntity<ApiResponse<PagedResponse<List<PaymentEntity>>>> findPaymentByUser(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer limit,
             @RequestParam(defaultValue = "COMPLETED") List<EPaymentStatus> status
     ) {
-        FindPaymentByUserDto findPaymentByUserDto = new FindPaymentByUserDto(status, page, limit);
-        DtoException<FindPaymentByUserDto> findPaymentByUserDtoException = DtoValidatorUtility.validate(findPaymentByUserDto);
-        if (findPaymentByUserDtoException.getError() != null)
-            throw CustomException.badRequest(findPaymentByUserDtoException.getError());
-        return new ResponseEntity<>(paymentServiceImpl.findPaymentByUser(findPaymentByUserDtoException.getData()), HttpStatus.OK);
+        FindPaymentByUserRequest findPaymentByUserRequest = new FindPaymentByUserRequest(status, page, limit);
+        return new ResponseEntity<>(paymentService.findPaymentByUser(findPaymentByUserRequest), HttpStatus.OK);
     }
 }

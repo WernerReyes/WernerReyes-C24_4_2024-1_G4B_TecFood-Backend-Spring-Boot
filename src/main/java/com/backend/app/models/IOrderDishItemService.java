@@ -1,7 +1,10 @@
 package com.backend.app.models;
 
-import com.backend.app.models.responses.orderDishItem.FindOrderDishItemByOrderResponse;
+import com.backend.app.models.dtos.responses.common.ApiResponse;
+import com.backend.app.persistence.entities.OrderDishItemEntity;
+
+import java.util.List;
 
 public interface IOrderDishItemService {
-    public FindOrderDishItemByOrderResponse findOrderDishItemByOrder(Long orderDishId);
+    ApiResponse<List<OrderDishItemEntity>> findOrderDishItemByOrderId(Long orderDishId);
 }

@@ -16,7 +16,7 @@ public class CartDishEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="cart_id")
-    private Long idCart;
+    private Long id;
 
     @Column(name="quantity")
     private int quantity;

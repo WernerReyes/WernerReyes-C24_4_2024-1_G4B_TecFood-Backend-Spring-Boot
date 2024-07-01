@@ -7,10 +7,8 @@ import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -53,7 +51,6 @@ public class JwtUtility {
         return signedJWT.serialize();
     }
 
-
     public JWTClaimsSet parseJWT(String jwt) throws Exception {
         SignedJWT signedJWT = SignedJWT.parse(jwt);
 
@@ -72,8 +69,12 @@ public class JwtUtility {
     public Long getUserIdFromJWT(String jwt) throws Exception {
         SignedJWT signedJWT = SignedJWT.parse(jwt);
         JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
-        System.out.println("token expirado " + claimsSet.getSubject());
         return Long.parseLong(claimsSet.getSubject());
+    }
+
+    public boolean validateToken(String token, UserDetails userDetails) throws Exception {
+        final Long userId = getUserIdFromJWT(token);
+        return userId.equals(Long.parseLong(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
     private PrivateKey loadPrivateKey(Resource resource) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
@@ -102,6 +103,13 @@ public class JwtUtility {
         return keyFactory.generatePublic(new X509EncodedKeySpec(decodedKey));
     }
 
-
+    private boolean isTokenExpired(String token) {
+        try {
+            JWTClaimsSet claims = parseJWT(token);
+            return claims.getExpirationTime().before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
+    }
 
 }

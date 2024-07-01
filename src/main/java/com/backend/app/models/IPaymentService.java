@@ -1,11 +1,14 @@
 package com.backend.app.models;
 
-import com.backend.app.models.dtos.payment.FindPaymentByUserDto;
-import com.backend.app.models.dtos.payment.ProcessPaymentDto;
-import com.backend.app.models.responses.payment.FindPaymentByUserResponse;
-import com.backend.app.models.responses.payment.ProcessPaymentResponse;
+import com.backend.app.models.dtos.requests.payment.FindPaymentByUserRequest;
+import com.backend.app.models.dtos.requests.payment.ProcessPaymentRequest;
+import com.backend.app.models.dtos.responses.common.ApiResponse;
+import com.backend.app.models.dtos.responses.common.PagedResponse;
+import com.backend.app.persistence.entities.PaymentEntity;
+
+import java.util.List;
 
 public interface IPaymentService {
-    ProcessPaymentResponse processPayment(ProcessPaymentDto processPaymentDto);
-    FindPaymentByUserResponse findPaymentByUser(FindPaymentByUserDto findPaymentByUserDto);
+    ApiResponse<PaymentEntity> processPayment(ProcessPaymentRequest processPaymentRequest);
+    ApiResponse<PagedResponse<List<PaymentEntity>>> findPaymentByUser(FindPaymentByUserRequest findPaymentByUserRequest);
 }

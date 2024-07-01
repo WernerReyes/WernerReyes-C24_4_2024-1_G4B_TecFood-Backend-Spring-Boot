@@ -1,15 +1,15 @@
 package com.backend.app.services;
 
 import com.backend.app.models.IOpenAIService;
-import com.backend.app.models.dtos.openAI.ChatDto;
-import com.backend.app.models.dtos.openAI.MessageDto;
-import com.backend.app.models.responses.openAI.ChatResponse;
+import com.backend.app.models.dtos.requests.openAI.ChatRequest;
+import com.backend.app.models.dtos.responses.common.ApiResponse;
+import com.backend.app.models.dtos.responses.openAI.ChatResponse;
 import com.backend.app.persistence.entities.DishEntity;
 import com.backend.app.persistence.entities.UserEntity;
+import com.backend.app.persistence.enums.EResponseStatus;
 import com.backend.app.persistence.enums.ERoleOpenAI;
 import com.backend.app.persistence.repositories.DishRepository;
-import com.backend.app.utilities.UserAuthenticationUtility;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -22,12 +22,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Qualifier("openaiRestTemplate")
+@RequiredArgsConstructor
 @Service
 public class OpenAIServiceImpl implements IOpenAIService {
 
-    @Autowired
-    @Qualifier("openaiRestTemplate")
-    private RestTemplate restTemplate;
+    private final DishRepository dishRepository;
+    private final RestTemplate restTemplate;
+    private final UserAuthenticationService userAuthenticationService;
 
     @Value("${openai.model}")
     private String model;
@@ -38,45 +40,55 @@ public class OpenAIServiceImpl implements IOpenAIService {
     @Value("${frontend.url}")
     private String frontendUrl;
 
-    @Autowired
-    private DishRepository dishRepository;
-
-    @Autowired
-    private UserAuthenticationUtility userAuthenticationUtility;
-
     @Override
-    public ChatResponse greetUser() {
+    public ApiResponse<ChatResponse> greetUser() {
         HttpEntity<Map<String, Object>> entity = prepareRequest(
-                new ChatDto(new ArrayList<>(
-                        List.of(new MessageDto(ERoleOpenAI.system, regart()))
+                new ChatRequest(new ArrayList<>(
+                        List.of(new ChatRequest.MessageRequest(ERoleOpenAI.system, regart()))
                 ))
         );
-        return restTemplate.postForObject(apiUrl, entity, ChatResponse.class);
+        try {
+            return new ApiResponse<>(EResponseStatus.SUCCESS, "Success", restTemplate.postForObject(apiUrl, entity, ChatResponse.class));
+        } catch (Exception e) {
+            return errorResponse();
+        }
     }
 
     @Override
-    public ChatResponse chat(ChatDto chatDto) {
-        HttpEntity<Map<String, Object>> entity = prepareRequest(chatDto);
-        return  restTemplate.postForObject(apiUrl, entity, ChatResponse.class);
-
+    public ApiResponse<ChatResponse> chat(ChatRequest chatRequest) {
+        HttpEntity<Map<String, Object>> entity = prepareRequest(chatRequest);
+        try {
+            return  new ApiResponse<>(EResponseStatus.SUCCESS, "Success", restTemplate.postForObject(apiUrl, entity, ChatResponse.class));
+        } catch (Exception e) {
+            return errorResponse();
+        }
     }
 
-    private HttpEntity<Map<String, Object>> prepareRequest(ChatDto chatDto) {
+    private HttpEntity<Map<String, Object>> prepareRequest(ChatRequest chatRequest) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", model);
 
         //* Instructions to follow
-        chatDto.getMessages().add(new MessageDto(ERoleOpenAI.system, instructions()));
+        chatRequest.getMessages().add(new ChatRequest.MessageRequest(ERoleOpenAI.system, instructions()));
 
-        requestBody.put("messages", chatDto.getMessages());
+        requestBody.put("messages", chatRequest.getMessages());
 
         return new HttpEntity<>(requestBody, headers);
     }
 
+    private ApiResponse<ChatResponse> errorResponse() {
+        return new ApiResponse<>(EResponseStatus.ERROR,
+                "Error",
+                new ChatResponse("Error",  0,
+                        List.of(new ChatResponse.Choice(new ChatRequest.MessageRequest(ERoleOpenAI.system, "Sorry, but I'm not avaiable at this momenent \uD83D\uDE1E")) )
+                )
+        );
+    }
+
     private String regart() {
-        UserEntity user = userAuthenticationUtility.find();
+        UserEntity user = userAuthenticationService.find();
         return  formToFill() +  " Saluda con lo siguiente o con algo similar, pero siempre saludando y mencionando al usuario: Hola " + user.getFirstName() + " " + user.getLastName() + " Soy TecFood Bot \uD83E\uDD16, un asistente virtual que te ayudará a conocer más sobre los platillos que se ofrecen en el aplicativo. ¿En qué puedo ayudarte?";
     }
 

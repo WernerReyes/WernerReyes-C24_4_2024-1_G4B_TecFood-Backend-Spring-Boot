@@ -1,53 +1,48 @@
 package com.backend.app.controllers;
 
-import com.backend.app.exceptions.CustomException;
-import com.backend.app.exceptions.DtoException;
 import com.backend.app.models.IUserService;
-import com.backend.app.models.dtos.user.UpdateUserDto;
-import com.backend.app.models.dtos.user.UploadProfileDto;
-import com.backend.app.models.responses.user.UpdateUserResponse;
-import com.backend.app.models.responses.user.UploadProfileResponse;
-import com.backend.app.utilities.DtoValidatorUtility;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.backend.app.models.dtos.requests.common.UploadImagesRequest;
+import com.backend.app.models.dtos.requests.user.UpdateUserRequest;
+import com.backend.app.models.dtos.responses.common.ApiResponse;
+import com.backend.app.persistence.entities.UserEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
 
-    @Autowired
-    private IUserService userService;
+    private final IUserService userService;
 
     @GetMapping("")
-    public ResponseEntity<?> getAll() {
+    public ResponseEntity<ApiResponse<List<UserEntity>>> getAll() {
         return new ResponseEntity<>(userService.findAll(), HttpStatus.OK);
     }
 
     @GetMapping("/find/{id}")
-    public ResponseEntity<?> findById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<UserEntity>> findById(@PathVariable Long id) {
         return new ResponseEntity<>(userService.findById(id), HttpStatus.OK);
     }
 
     @PutMapping("/update")
-    public ResponseEntity<UpdateUserResponse> updateUser(
-            @RequestBody UpdateUserDto updateUserDto
+    public ResponseEntity<ApiResponse<UserEntity>> updateUser(
+            @RequestBody UpdateUserRequest updateUserRequest
     ) throws Exception {
-        DtoException<UpdateUserDto> updateUserDtoException = DtoValidatorUtility.validate(updateUserDto);
-        if (updateUserDtoException.getError() != null) throw CustomException.badRequest(updateUserDtoException.getError());
-        return new ResponseEntity<>(userService.updateUser(updateUserDtoException.getData()), HttpStatus.OK);
+        return new ResponseEntity<>(userService.updateUser(updateUserRequest), HttpStatus.OK);
     }
 
     @PostMapping("/upload-profile")
-    public ResponseEntity<UploadProfileResponse> uploadProfile(
+    public ResponseEntity<ApiResponse<String>> uploadProfile(
             @RequestParam("file") MultipartFile file
     ) throws Exception {
-        UploadProfileDto uploadProfileDto = new UploadProfileDto(file);
-        DtoException<UploadProfileDto> uploadProfileDtoException = DtoValidatorUtility.validate(uploadProfileDto);
-        if (uploadProfileDtoException.getError() != null) throw CustomException.badRequest(uploadProfileDtoException.getError());
-        return new ResponseEntity<>(userService.uploadProfile(uploadProfileDtoException.getData()), HttpStatus.OK);
+        UploadImagesRequest uploadImagesRequest = new UploadImagesRequest(List.of(file));
+        return new ResponseEntity<>(userService.uploadProfile(uploadImagesRequest), HttpStatus.OK);
     }
 }
 

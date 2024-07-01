@@ -2,65 +2,64 @@ package com.backend.app.services;
 
 import com.backend.app.exceptions.CustomException;
 import com.backend.app.models.IAuthService;
-import com.backend.app.models.dtos.auth.LoginGoogleUserDto;
-import com.backend.app.models.dtos.auth.LoginUserDto;
-import com.backend.app.models.dtos.auth.RegisterUserDto;
-import com.backend.app.models.responses.auth.LoginUserResponse;
-import com.backend.app.models.responses.auth.RegisterUserResponse;
+import com.backend.app.models.dtos.requests.auth.LoginGoogleRequest;
+import com.backend.app.models.dtos.requests.auth.LoginRequest;
+import com.backend.app.models.dtos.requests.auth.RegisterRequest;
+import com.backend.app.models.dtos.responses.auth.*;
+import com.backend.app.models.dtos.responses.common.ApiResponse;
+import com.backend.app.persistence.enums.EResponseStatus;
 import com.backend.app.persistence.enums.ERole;
 import com.backend.app.persistence.entities.UserEntity;
 import com.backend.app.persistence.repositories.RoleRepository;
 import com.backend.app.persistence.repositories.UserRepository;
 import com.backend.app.utilities.JwtUtility;
-import com.backend.app.utilities.UserAuthenticationUtility;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.backend.app.utilities.ValidationsUtility;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
+@RequiredArgsConstructor
 @Service
 public class AuthServiceImpl implements IAuthService {
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserAuthenticationService userAuthenticationService;
 
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private JwtUtility jwtUtility;
-
-    @Autowired
-    private UserAuthenticationUtility userAuthenticationUtility;
+    private final JwtUtility jwtUtility;
 
     @Override
-    public LoginUserResponse login(LoginUserDto loginUserDto) throws Exception {
-        UserEntity user = userRepository.findByEmail(loginUserDto.getEmail());
+    public ApiResponse<LoginResponse> login(LoginRequest loginRequest) throws Exception {
+        UserEntity user = userRepository.findByEmail(loginRequest.getEmail());
         if (user == null) throw CustomException.badRequest("Email or password is incorrect");
-        if(!passwordEncoder.matches(loginUserDto.getPassword(), user.getPassword())) {
+        if(!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw CustomException.badRequest("Email or password is incorrect");
         }
         String token = jwtUtility.generateJWT(user.getId());
-        return new LoginUserResponse(
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
                 "Login successful",
-                user,
-                token
+                new LoginResponse(
+                        user,
+                        token
+                )
         );
     }
 
-    public LoginUserResponse loginGoogle(LoginGoogleUserDto loginGoogleUserDto) throws Exception {
-        UserEntity user = userRepository.findByEmail(loginGoogleUserDto.getEmail());
+    public ApiResponse<LoginResponse> loginGoogle(LoginGoogleRequest loginGoogleRequest) throws Exception {
+        UserEntity user = userRepository.findByEmail(loginGoogleRequest.getEmail());
         if (user == null) {
             user = UserEntity.builder()
-                    .email(loginGoogleUserDto.getEmail())
-                    .password(passwordEncoder.encode("google" + loginGoogleUserDto.getEmail()))
+                    .email(loginGoogleRequest.getEmail())
+                    .password(passwordEncoder.encode(loginGoogleRequest.getPassword()))
                     .role(roleRepository.findByName(ERole.ROLE_USER))
-                    .firstName(loginGoogleUserDto.getFirstName())
-                    .lastName(loginGoogleUserDto.getLastName())
-                    .imgUrl(loginGoogleUserDto.getImgUrl())
+                    .firstName(loginGoogleRequest.getFirstName())
+                    .lastName(loginGoogleRequest.getLastName())
+                    .imgUrl(loginGoogleRequest.getImgUrl())
                     .isGoogleAccount(true)
                     .isVerifiedEmail(true)
                     .createdAt(LocalDateTime.now())
@@ -77,68 +76,72 @@ public class AuthServiceImpl implements IAuthService {
         }
 
         String token = jwtUtility.generateJWT(user.getId());
-        return new LoginUserResponse(
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
                 "Login successful",
-                user,
-                token
+                new LoginResponse(
+                        user,
+                        token
+                )
         );
     }
 
-    public RegisterUserResponse register(RegisterUserDto registerUserDto) {
-        UserEntity user = userRepository.findByEmail(registerUserDto.getEmail());
+    public ApiResponse<Void> register(RegisterRequest registerRequest) {
+        UserEntity user = userRepository.findByEmail(registerRequest.getEmail());
         if (user != null) throw CustomException.badRequest("Email already exists");
-
-        System.out.println("dni: " + registerUserDto.getDni().isEmpty());
-
-        if(registerUserDto.getDni() != null && !registerUserDto.getDni().isEmpty()) {
-            user = userRepository.findByDni(registerUserDto.getDni());
+        if(!StringUtils.isEmpty(registerRequest.getDni())) {
+            user = userRepository.findByDni(registerRequest.getDni());
             if (user != null) throw CustomException.badRequest("DNI already exists");
         }
 
         user = UserEntity.builder()
-                .email(registerUserDto.getEmail())
-                .password(passwordEncoder.encode(registerUserDto.getPassword()))
+                .email(registerRequest.getEmail())
+                .password(passwordEncoder.encode(registerRequest.getPassword()))
                 .role(roleRepository.findByName(ERole.ROLE_USER))
-                .firstName(registerUserDto.getFirstName())
-                .lastName(registerUserDto.getLastName())
-                .phoneNumber(registerUserDto.getPhoneNumber().isEmpty() ? null : registerUserDto.getPhoneNumber())
-                .dni(registerUserDto.getDni().isEmpty() ? null : registerUserDto.getDni())
+                .firstName(registerRequest.getFirstName())
+                .lastName(registerRequest.getLastName())
+                .phoneNumber(ValidationsUtility.hasText(registerRequest.getPhoneNumber()))
+                .dni(ValidationsUtility.hasText(registerRequest.getDni()))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
+
+
         userRepository.save(user);
 
-        return new RegisterUserResponse(
-                "User " + user.getEmail() + " created successfully"
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
+                "User registered successfully",
+                null
+
         );
     }
 
     @Override
-    public LoginUserResponse renovateToken(
-       String expiredToken
+    public ApiResponse<String> renovateToken(
+            String expiredToken
     ) throws Exception {
         Long userId = jwtUtility.getUserIdFromJWT(expiredToken);
         UserEntity user = userRepository.findById(userId).orElse(null);
         if (user == null) throw CustomException.badRequest("User not found");
         String token = jwtUtility.generateJWT(user.getId());
-        return new LoginUserResponse(
-                "Token refreshed",
-                user,
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
+                "Token renovated successfully",
                 token
         );
     }
 
     @Override
-    public LoginUserResponse revalidateToken(
+    public ApiResponse<UserEntity> revalidateToken(
 
-    ) throws Exception {
-        UserEntity user = userAuthenticationUtility.find();
-        String token = jwtUtility.generateJWT(user.getId());
-        return new LoginUserResponse(
-                "Token refreshed",
-                    user,
-                    token
+    ) {
+        UserEntity user = userAuthenticationService.find();
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
+                "Token revalidated successfully",
+                user
         );
     }
 

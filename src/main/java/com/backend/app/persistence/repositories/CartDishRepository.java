@@ -12,5 +12,6 @@ import java.util.List;
 public interface CartDishRepository extends JpaRepository<CartDishEntity, Long> {
     CartDishEntity findByUserAndDish(UserEntity user, DishEntity dish);
     List<CartDishEntity> findByUser(UserEntity user);
-    CartDishEntity findByDish_IdDish(Long idDish);
+    CartDishEntity findByDish_Id(Long dishId);
+    boolean existsByDishId(Long dishId);
 }
