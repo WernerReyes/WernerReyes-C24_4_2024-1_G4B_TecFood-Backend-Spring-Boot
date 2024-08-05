@@ -43,6 +43,18 @@ public class DishController {
         return new ResponseEntity<>(dishService.putOffer(putDishOfferRequest), HttpStatus.OK);
     }
 
+    @DeleteMapping("/offer/{dishId}")
+    @PreAuthorize("hasRole(T(com.backend.app.security.SecurityConstants).ROLE_ADMIN)")
+    public ResponseEntity<ApiResponse<DishEntity>> deleteOffer(@PathVariable Long dishId) {
+        return new ResponseEntity<>(dishService.deleteOffer(dishId), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/offer/delete-many")
+    @PreAuthorize("hasRole(T(com.backend.app.security.SecurityConstants).ROLE_ADMIN)")
+    public ResponseEntity<ApiResponse<List<DishEntity>>> deleteManyOffers(@RequestParam List<Long> dishesId) {
+        return new ResponseEntity<>(dishService.deleteManyOffers(dishesId), HttpStatus.OK);
+    }
+
     @PutMapping("")
     @PreAuthorize("hasRole(T(com.backend.app.security.SecurityConstants).ROLE_ADMIN)")
     public ResponseEntity<ApiResponse<DishEntity>> update(

@@ -2,7 +2,6 @@ package com.backend.app.services;
 
 import com.backend.app.exceptions.CustomException;
 import com.backend.app.models.IDishService;
-import com.backend.app.models.INotificationService;
 import com.backend.app.models.IUploadFileService;
 import com.backend.app.models.dtos.requests.common.UpdateStatusRequest;
 import com.backend.app.models.dtos.requests.common.UploadImagesRequest;
@@ -118,6 +117,43 @@ public class DishServiceImpl implements IDishService {
                 dish
         );
     }
+
+    @Override
+    public ApiResponse<DishEntity> deleteOffer(Long dishId) {
+        DishEntity dish = dishRepository.findById(dishId).orElse(null);
+        if (dish == null) throw CustomException.badRequest("Dish not found");
+
+        dish.setDiscountPercentage(null);
+        dish.setDiscountPrice(null);
+        dish.setSaleStartDate(null);
+        dish.setSaleEndDate(null);
+        dishRepository.save(dish);
+
+        return new ApiResponse<>(
+                EResponseStatus.SUCCESS,
+                "Dish offer deleted successfully",
+                dish
+        );
+    }
+
+    @Override
+    public ApiResponse<List<DishEntity>> deleteManyOffers(List<Long> dishesId) {
+        try {
+            List<DishEntity> dishes = new ArrayList<>();
+            for (Long dishId : dishesId) {
+                DishEntity dish = this.deleteOffer(dishId).data();
+                dishes.add(dish);
+            }
+            return new ApiResponse<>(
+                    EResponseStatus.SUCCESS,
+                    dishes.size() + " offers were deleted successfully",
+                    dishes
+            );
+        } catch (Exception e) {
+            throw CustomException.badRequest(e.getMessage());
+        }
+    }
+
 
     @Override
     public ApiResponse<DishEntity> update(UpdateDishRequest updateDishRequest) {

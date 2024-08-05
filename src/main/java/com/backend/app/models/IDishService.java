@@ -13,6 +13,8 @@ import java.util.List;
 public interface IDishService {
     ApiResponse<DishEntity> create(CreateDishRequest createDishDto, UploadImagesRequest uploadImagesRequest);
     ApiResponse<DishEntity> putOffer(PutDishOfferRequest putDishOfferRequest);
+    ApiResponse<DishEntity> deleteOffer(Long dishId);
+    ApiResponse<List<DishEntity>> deleteManyOffers(List<Long> dishesId);
     ApiResponse<DishEntity> update(UpdateDishRequest updateDishDto);
     ApiResponse<List<DishImageEntity>> updateImage(UpdateDishImageRequest updateDishImageRequest);
     ApiResponse<DishEntity> updateStatus(UpdateStatusRequest updateStatusRequest);

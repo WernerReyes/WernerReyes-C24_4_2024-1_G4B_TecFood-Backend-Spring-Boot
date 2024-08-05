@@ -1,5 +1,8 @@
 package com.backend.app.models;
 
+import com.backend.app.models.dtos.requests.notification.SendNotificationRequest;
+import com.backend.app.models.dtos.responses.common.ApiResponse;
+
 public interface INotificationService {
-    <T> void sendNotification(String message, T data);
+    ApiResponse<Void> sendNotification(SendNotificationRequest sendNotificationRequest);
 }

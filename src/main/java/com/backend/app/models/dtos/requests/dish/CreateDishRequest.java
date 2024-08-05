@@ -5,7 +5,6 @@ import lombok.Getter;
 
 import java.util.List;
 
-
 @Getter
 public class CreateDishRequest extends DishRequest {
 
